@@ -28,7 +28,7 @@ const App: React.FC = () => {
     <div className="min-h-screen pb-12">
       <ClockHeader currentTime={currentTime} />
       
-      <main className="max-w-7xl mx-auto px-4 -mt-8 relative z-10">
+      <main className="max-w-[95vw] mx-auto px-4 -mt-8 relative z-10">
         <div className="grid gap-6">
           <div className="bg-white/80 backdrop-blur rounded-xl p-6 border border-white/20 shadow-sm mb-4">
              <h2 className="text-xl font-bold text-slate-800 mb-2">全球商务联络最佳时机 (Global Reach Analyzer)</h2>

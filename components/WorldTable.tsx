@@ -138,11 +138,27 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
         hour12: false
       }).format(currentTime);
 
-      // 2. Calculate offsets
+      // 2. Calculate UTC offset
+      // Format the same time in UTC and local timezone to get hour difference
+      const utcTimeStr = new Intl.DateTimeFormat('en-US', {
+        hour: '2-digit',
+        hour12: false,
+        timeZone: 'UTC'
+      }).format(currentTime);
+      const utcHour = parseInt(utcTimeStr);
+      const localHour = parseInt(displayLocalTime.split(':')[0]);
+      
+      // Calculate offset in hours (UTC offset = local - UTC)
+      let offsetHours = localHour - utcHour;
+      // Handle day boundary crossing (e.g., UTC 23:00 vs local 01:00)
+      if (offsetHours > 12) offsetHours -= 24;
+      if (offsetHours < -12) offsetHours += 24;
+      const utcOffsetLabel = offsetHours >= 0 ? `UTC+${offsetHours}` : `UTC${offsetHours}`;
+      
+      // Keep hourDiff for other calculations (Beijing time conversion)
       let hourDiff = bjHour - currentLocalHour;
       if (hourDiff < -14) hourDiff += 24;
       if (hourDiff > 14) hourDiff -= 24;
-      const offsetLabel = hourDiff >= 0 ? `+${hourDiff}` : `${hourDiff}`;
 
       // 3. Holiday & Weekend Detection
       const holidayName = checkHoliday(localDateObj, country.id);
@@ -225,6 +241,12 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
         return `${f(s.startHour)}:00-${f(s.endHour)}:00`;
       }).join(' / ');
 
+      // Calculate work hours (9:00-18:00 local time) in Beijing time
+      const workStartBj = ((9 + hourDiff) % 24 + 24) % 24;
+      const workEndBj = ((18 + hourDiff) % 24 + 24) % 24;
+      const f = (n: number) => n.toString().padStart(2, '0');
+      const workHoursBeijing = `${f(workStartBj)}:00-${f(workEndBj)}:00`;
+
       return {
         ...country,
         currentLocalTimeStr: displayLocalTime,
@@ -232,10 +254,11 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
         minutesUntilNextSlot: minSortScore, 
         nextGoodSlotLocal,
         nextGoodSlotBeijing,
-        timeDifferenceLabel: `BJ ${offsetLabel}h`,
+        timeDifferenceLabel: utcOffsetLabel,
         primeBeijingTime: selectedPrimeBjTime,
         primeMorningBj,
         primeAfternoonBj,
+        workHoursBeijing,
         isWeekend,
         isHoliday,
         holidayName
@@ -309,7 +332,7 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
       </div>
 
       <div className="overflow-x-auto">
-        <table className="w-full text-left border-collapse">
+        <table className="w-full text-left border-collapse" style={{ tableLayout: 'auto' }}>
           <thead>
             <tr className="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider border-b border-slate-100">
               <th className="p-4 font-semibold min-w-[220px]">
@@ -320,19 +343,18 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
                 当地时间
                 <div className="text-[10px] text-slate-400 font-normal normal-case">Local Time</div>
               </th>
+              <th className="p-4 font-semibold text-center min-w-[140px] whitespace-nowrap">
+                上班时间(北京)
+                <div className="text-[10px] text-slate-400 font-normal normal-case">Work Hours (BJ)</div>
+              </th>
               <th className="p-4 font-semibold hidden md:table-cell text-slate-500">
-                 当地习惯窗口
-                <div className="text-[10px] text-slate-400 font-normal normal-case">Local Habit</div>
+                 当地最佳发信时段
+                <div className="text-[10px] text-slate-400 font-normal normal-case">Local Best Window</div>
               </th>
               
               <th className="p-4 font-semibold bg-indigo-50/50 border-b-2 border-indigo-500 text-indigo-800 text-center hidden md:table-cell">
-                最佳时段 (北京)
-                <div className="text-[10px] text-indigo-600 font-normal normal-case">Best Windows (BJ)</div>
-              </th>
-
-              <th className="p-4 font-semibold">
-                状态
-                <div className="text-[10px] text-slate-400 font-normal normal-case">Status</div>
+                最佳发信时段(北京)
+                <div className="text-[10px] text-indigo-600 font-normal normal-case">Best Window (BJ)</div>
               </th>
               <th className="p-4 font-semibold bg-amber-50/50 border-b-2 border-amber-500 text-amber-800 text-center">
                  早安发信点 (BJ)
@@ -342,19 +364,25 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
                  午安发信点 (BJ)
                 <div className="text-[10px] text-blue-600 font-normal normal-case">Afternoon Prime</div>
               </th>
+              <th className="p-4 font-semibold">
+                状态
+                <div className="text-[10px] text-slate-400 font-normal normal-case">Status</div>
+              </th>
             </tr>
           </thead>
           <tbody className="divide-y divide-slate-100">
             {sortedData.map((item) => (
               <tr 
                 key={item.id} 
-                className={`group transition-colors hover:bg-slate-50 ${
+                className={`group transition-colors hover:bg-slate-50 country-row ${
                   item.isHoliday ? 'bg-red-50/40' : 
                   item.isWeekend ? 'bg-slate-100/50' : 
                   item.isCurrentlyGood ? 'bg-green-50/30' : ''
                 }`}
+                data-country-name={item.name.includes('(') ? item.name.split('(')[0].trim() : item.name.split(' ')[0]}
+                data-country-flag={item.flag}
               >
-                <td className="p-4">
+                <td className="p-4 relative z-10">
                   <div className="flex items-center gap-3">
                     <span className="text-3xl" role="img" aria-label={item.name}>{item.flag}</span>
                     <div>
@@ -371,19 +399,43 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
                   </div>
                 </td>
                 
-                <td className="p-4 font-mono text-slate-700 font-medium text-base">
+                <td className="p-4 font-mono text-slate-700 font-medium text-base relative z-10">
                   {item.currentLocalTimeStr}
                 </td>
 
-                <td className="p-4 hidden md:table-cell text-sm text-slate-500">
+                <td className="p-4 text-center font-mono text-slate-700 font-medium text-sm whitespace-nowrap relative z-10">
+                  {item.workHoursBeijing}
+                </td>
+
+                <td className="p-4 hidden md:table-cell text-sm text-slate-500 relative z-10">
                   {item.nextGoodSlotLocal}
                 </td>
 
-                <td className="p-4 bg-indigo-50/30 group-hover:bg-indigo-100/30 transition-colors text-center border-l border-indigo-100/50 text-indigo-900 font-medium text-sm hidden md:table-cell">
+                <td className="p-4 bg-indigo-50/30 group-hover:bg-indigo-100/30 transition-colors text-center border-l border-indigo-100/50 text-indigo-900 font-medium text-sm hidden md:table-cell relative z-10">
                    {item.nextGoodSlotBeijing}
                 </td>
 
-                <td className="p-4">
+                {/* Morning Prime - Changed from button to div */}
+                <td className="p-4 bg-amber-50/30 group-hover:bg-amber-100/30 transition-colors text-center border-l border-amber-100/50 relative z-10">
+                  <div 
+                    className="flex items-center justify-center gap-2 mx-auto font-bold text-lg text-amber-700"
+                  >
+                    <Sun className="w-4 h-4" />
+                    {item.primeMorningBj}
+                  </div>
+                </td>
+
+                {/* Afternoon Prime - Changed from button to div */}
+                <td className="p-4 bg-blue-50/30 group-hover:bg-blue-100/30 transition-colors text-center border-l border-blue-100/50 relative z-10">
+                  <div 
+                    className="flex items-center justify-center gap-2 mx-auto font-bold text-lg text-blue-700"
+                  >
+                    <Sunset className="w-4 h-4" />
+                    {item.primeAfternoonBj}
+                  </div>
+                </td>
+
+                <td className="p-4 relative z-10">
                   {item.isHoliday ? (
                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-100 text-red-700 border border-red-200 whitespace-nowrap" title={`Public Holiday: ${item.holidayName}`}>
                        <Palmtree className="w-3 h-3" />
@@ -409,26 +461,6 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
                     </span>
                   )}
                   {item.isHoliday && <div className="text-[10px] text-red-500 mt-1 font-medium truncate max-w-[80px]">{item.holidayName}</div>}
-                </td>
-
-                {/* Morning Prime - Changed from button to div */}
-                <td className="p-4 bg-amber-50/30 group-hover:bg-amber-100/30 transition-colors text-center border-l border-amber-100/50">
-                  <div 
-                    className="flex items-center justify-center gap-2 mx-auto font-bold text-lg text-amber-700"
-                  >
-                    <Sun className="w-4 h-4" />
-                    {item.primeMorningBj}
-                  </div>
-                </td>
-
-                {/* Afternoon Prime - Changed from button to div */}
-                <td className="p-4 bg-blue-50/30 group-hover:bg-blue-100/30 transition-colors text-center border-l border-blue-100/50">
-                  <div 
-                    className="flex items-center justify-center gap-2 mx-auto font-bold text-lg text-blue-700"
-                  >
-                    <Sunset className="w-4 h-4" />
-                    {item.primeAfternoonBj}
-                  </div>
                 </td>
               </tr>
             ))}

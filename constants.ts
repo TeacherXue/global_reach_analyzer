@@ -656,6 +656,33 @@ export const COUNTRIES: CountryData[] = [
     bestSlots: DEFAULT_SLOTS
   },
   {
+    id: 'tm',
+    name: '土库曼斯坦 Turkmenistan',
+    flag: '🇹🇲',
+    region: '亚洲 Asia',
+    timeZone: 'Asia/Ashgabat',
+    callingCode: '+993',
+    bestSlots: DEFAULT_SLOTS
+  },
+  {
+    id: 'tj',
+    name: '塔吉克斯坦 Tajikistan',
+    flag: '🇹🇯',
+    region: '亚洲 Asia',
+    timeZone: 'Asia/Dushanbe',
+    callingCode: '+992',
+    bestSlots: DEFAULT_SLOTS
+  },
+  {
+    id: 'kg',
+    name: '吉尔吉斯斯坦 Kyrgyzstan',
+    flag: '🇰🇬',
+    region: '亚洲 Asia',
+    timeZone: 'Asia/Bishkek',
+    callingCode: '+996',
+    bestSlots: DEFAULT_SLOTS
+  },
+  {
     id: 'az',
     name: '阿塞拜疆 Azerbaijan',
     flag: '🇦🇿',

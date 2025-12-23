@@ -26,3 +26,42 @@ body {
   background: #94a3b8; 
 }
 
+/* Country name background for table rows - using ::after on tr, positioned absolutely but not affecting table layout */
+.country-row {
+  position: relative;
+  isolation: isolate; /* Creates a new stacking context */
+}
+
+.country-row::after {
+  content: attr(data-country-flag) "  " attr(data-country-name);
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 4.5rem;
+  font-weight: bold;
+  color: #475569;
+  opacity: 0.06;
+  pointer-events: none;
+  z-index: 0;
+  white-space: nowrap;
+  user-select: none;
+  transition: opacity 0.2s;
+  box-sizing: border-box;
+  letter-spacing: 0.2em;
+}
+
+.country-row:hover::after {
+  opacity: 0.08;
+}
+
+/* Ensure all td elements are above the background */
+.country-row td {
+  position: relative;
+  z-index: 1;
+}
+

@@ -20,10 +20,11 @@ export interface ComputedCountryData extends CountryData {
   nextGoodSlotLocal: string;
   nextGoodSlotBeijing: string;
   minutesUntilNextSlot: number;
-  timeDifferenceLabel: string; // e.g. "Beijing is +12h"
+  timeDifferenceLabel: string; // e.g. "UTC+8" or "UTC-5"
   primeBeijingTime: string;    // e.g. "22:00" (The single best point in BJ time - kept for sorting reference)
   primeMorningBj: string;      // Beijing time for local morning slot
   primeAfternoonBj: string;    // Beijing time for local afternoon slot
+  workHoursBeijing: string;    // Beijing time for local 9:00-18:00 work hours
   isWeekend: boolean;          // Is it currently weekend in that country?
   isHoliday: boolean;          // Is it currently a public holiday?
   holidayName: string | null;  // Name of the holiday if applicable
