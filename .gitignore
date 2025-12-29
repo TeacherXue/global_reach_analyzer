@@ -1,3 +1,7 @@
+# Docker 构建产物
+*.tar
+*.tar.gz
+
 # Logs
 logs
 *.log
