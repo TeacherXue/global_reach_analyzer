@@ -6,7 +6,46 @@ import { AlertCircle, Clock, Search, Filter, Sun, Sunset, Palmtree, Coffee } fro
 interface WorldTableProps {
   currentTime: Date;
   onAssistantRequest: (country: CountryData, localTime: string) => void;
+  onCountryClick?: (iso3: string) => void;
 }
+
+// Mapping from country ID prefix to ISO3 code
+const ID_TO_ISO3: Record<string, string> = {
+  'us': 'USA', 'ca': 'CAN', 'mx': 'MEX', 'pr': 'PRI', 'jm': 'JAM', 'tt': 'TTO',
+  'cu': 'CUB', 'do': 'DOM', 'gt': 'GTM', 'cr': 'CRI', 'pa': 'PAN',
+  'br': 'BRA', 'ar': 'ARG', 'cl': 'CHL', 'co': 'COL', 'pe': 'PER',
+  've': 'VEN', 'ec': 'ECU', 'uy': 'URY', 'py': 'PRY', 'bo': 'BOL',
+  'uk': 'GBR', 'de': 'DEU', 'fr': 'FRA', 'it': 'ITA', 'es': 'ESP',
+  'nl': 'NLD', 'ch': 'CHE', 'lu': 'LUX', 'se': 'SWE', 'no': 'NOR',
+  'dk': 'DNK', 'fi': 'FIN', 'ie': 'IRL', 'pl': 'POL', 'at': 'AUT',
+  'be': 'BEL', 'pt': 'PRT', 'gr': 'GRC', 'cz': 'CZE', 'hu': 'HUN',
+  'ro': 'ROU', 'bg': 'BGR', 'rs': 'SRB', 'hr': 'HRV', 'sk': 'SVK',
+  'by': 'BLR', 'lt': 'LTU', 'lv': 'LVA', 'ee': 'EST', 'is': 'ISL',
+  'mt': 'MLT', 'cy': 'CYP', 'ru': 'RUS', 'ua': 'UKR',
+  'jp': 'JPN', 'kr': 'KOR', 'sg': 'SGP', 'in': 'IND', 'pk': 'PAK',
+  'bd': 'BGD', 'lk': 'LKA', 'mv': 'MDV', 'np': 'NPL',
+  'kz': 'KAZ', 'uz': 'UZB', 'tm': 'TKM', 'tj': 'TJK', 'kg': 'KGZ', 'az': 'AZE',
+  'vn': 'VNM', 'th': 'THA', 'id': 'IDN', 'my': 'MYS', 'ph': 'PHL',
+  'mm': 'MMR', 'kh': 'KHM', 'mn': 'MNG',
+  'au': 'AUS', 'nz': 'NZL', 'pg': 'PNG',
+  'ae': 'ARE', 'sa': 'SAU', 'qa': 'QAT', 'kw': 'KWT', 'om': 'OMN',
+  'bh': 'BHR', 'iq': 'IRQ', 'jo': 'JOR', 'lb': 'LBN', 'il': 'ISR',
+  'tr': 'TUR', 'ir': 'IRN', 'eg': 'EGY',
+  'ng': 'NGA', 'za': 'ZAF', 'ke': 'KEN', 'gh': 'GHA', 'et': 'ETH',
+  'tz': 'TZA', 'dz': 'DZA', 'ma': 'MAR', 'tn': 'TUN', 'sn': 'SEN',
+  'ci': 'CIV', 'cm': 'CMR', 'ug': 'UGA', 'mz': 'MOZ',
+  'hk': 'HKG', 'tw': 'TWN', 'cn': 'CHN', 'la': 'LAO',
+  'ge': 'GEO', 'am': 'ARM',
+  'si': 'SVN', 'me': 'MNE', 'mk': 'MKD', 'al': 'ALB', 'ba': 'BIH',
+};
+
+const getIso3FromId = (id: string): string | null => {
+  // Try exact match first
+  if (ID_TO_ISO3[id]) return ID_TO_ISO3[id];
+  // Try prefix match (e.g. 'us-ny' -> 'us' -> 'USA')
+  const prefix = id.split('-')[0];
+  return ID_TO_ISO3[prefix] || null;
+};
 
 // Helper: Define Weekend Definitions by Country ID
 // Standard (Sat/Sun) is default.
@@ -111,7 +150,7 @@ const checkHoliday = (date: Date, countryId: string): string | null => {
   return null;
 };
 
-const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest }) => {
+const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest, onCountryClick }) => {
   const [filterRegion, setFilterRegion] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -320,8 +359,8 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
               key={r}
               onClick={() => setFilterRegion(r)}
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap border ${filterRegion === r
-                  ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 border-blue-500'
-                  : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border-slate-600/50 hover:border-slate-500 hover:text-slate-300'
+                ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 border-blue-500'
+                : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border-slate-600/50 hover:border-slate-500 hover:text-slate-300'
                 }`}
             >
               {r}
@@ -373,12 +412,16 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
             {sortedData.map((item) => (
               <tr
                 key={item.id}
-                className={`group transition-colors hover:bg-slate-700/40 country-row ${item.isHoliday ? 'bg-red-900/15' :
-                    item.isWeekend ? 'bg-slate-700/20' :
-                      item.isCurrentlyGood ? 'bg-green-900/15' : ''
+                className={`group transition-colors hover:bg-slate-700/40 country-row cursor-pointer ${item.isHoliday ? 'bg-red-900/15' :
+                  item.isWeekend ? 'bg-slate-700/20' :
+                    item.isCurrentlyGood ? 'bg-green-900/15' : ''
                   }`}
                 data-country-name={item.name.includes('(') ? item.name.split('(')[0].trim() : item.name.split(' ')[0]}
                 data-country-flag={item.flag}
+                onClick={() => {
+                  const iso3 = getIso3FromId(item.id);
+                  if (iso3 && onCountryClick) onCountryClick(iso3);
+                }}
               >
                 <td className="p-4 relative z-10">
                   <div className="flex items-center gap-3">
