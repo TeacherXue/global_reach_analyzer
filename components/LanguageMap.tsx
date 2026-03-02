@@ -79,7 +79,7 @@ const SMALL_COUNTRY_MARKERS: Array<{ iso3: string; coordinates: [number, number]
   { iso3: 'COM', coordinates: [43.8723, -11.6455], name: '科摩罗', flag: '🇰🇲' },
 ];
 
-const geoUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
+const geoUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-50m.json';
 
 // Mapping from ISO numeric codes to ISO alpha-3 codes (comprehensive list)
 const ISO_NUMERIC_TO_ALPHA3: Record<string, string> = {
@@ -640,8 +640,8 @@ const LanguageMap: React.FC = () => {
               <button
                 onClick={() => setShowLabels(!showLabels)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${showLabels
-                    ? 'bg-blue-600 text-white'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  ? 'bg-blue-600 text-white'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                   }`}
               >
                 <Tag className="w-4 h-4" />
@@ -652,8 +652,8 @@ const LanguageMap: React.FC = () => {
               <button
                 onClick={() => setShowTimezones(!showTimezones)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${showTimezones
-                    ? 'bg-amber-600 text-white'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  ? 'bg-amber-600 text-white'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                   }`}
               >
                 <Clock className="w-4 h-4" />
@@ -734,8 +734,8 @@ const LanguageMap: React.FC = () => {
                       <div
                         key={country.iso3}
                         className={`px-4 py-3 cursor-pointer border-b border-slate-700 last:border-b-0 transition-colors ${isSelected
-                            ? 'bg-blue-600 text-white'
-                            : 'hover:bg-slate-700'
+                          ? 'bg-blue-600 text-white'
+                          : 'hover:bg-slate-700'
                           }`}
                         onClick={() => {
                           setShowSearchResults(false);
@@ -778,8 +778,8 @@ const LanguageMap: React.FC = () => {
             <button
               onClick={() => setSelectedLanguage(null)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${selectedLanguage === null
-                  ? 'bg-white text-slate-900 shadow-lg'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                ? 'bg-white text-slate-900 shadow-lg'
+                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                 }`}
             >
               全部 All
@@ -789,8 +789,8 @@ const LanguageMap: React.FC = () => {
                 key={lang.id}
                 onClick={() => setSelectedLanguage(lang.id === selectedLanguage ? null : lang.id)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${selectedLanguage === lang.id
-                    ? 'text-white shadow-lg'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  ? 'text-white shadow-lg'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                   }`}
                 style={{
                   backgroundColor: selectedLanguage === lang.id ? lang.color : undefined,
@@ -816,8 +816,8 @@ const LanguageMap: React.FC = () => {
 
       {/* Map Container */}
       <div
-        className="relative transition-all duration-300"
-        style={{ height: 'calc(100vh - 180px)', marginRight: selectedCountryIso3 ? '440px' : '0' }}
+        className="relative"
+        style={{ height: 'calc(100vh - 180px)' }}
         onMouseMove={handleMouseMove}
       >
         <ComposableMap
@@ -834,7 +834,7 @@ const LanguageMap: React.FC = () => {
             center={position.coordinates}
             onMoveEnd={handleMoveEnd}
             minZoom={0.5}
-            maxZoom={8}
+            maxZoom={12}
           >
             <Geographies geography={geoUrl}>
               {({ geographies }) => {
@@ -1118,10 +1118,10 @@ const LanguageMap: React.FC = () => {
               <div className="flex justify-between gap-6">
                 <span className="text-slate-400">英语水平:</span>
                 <span className={`font-medium ${tooltip.englishProficiency === '母语' ? 'text-green-400' :
-                    tooltip.englishProficiency === '高' ? 'text-blue-400' :
-                      tooltip.englishProficiency === '中' ? 'text-amber-400' :
-                        tooltip.englishProficiency === '低' ? 'text-red-400' :
-                          'text-slate-400'
+                  tooltip.englishProficiency === '高' ? 'text-blue-400' :
+                    tooltip.englishProficiency === '中' ? 'text-amber-400' :
+                      tooltip.englishProficiency === '低' ? 'text-red-400' :
+                        'text-slate-400'
                   }`}>
                   {tooltip.englishProficiency}
                 </span>
@@ -1170,8 +1170,8 @@ const LanguageMap: React.FC = () => {
               <div className="flex justify-between gap-6">
                 <span className="text-slate-400">WhatsApp普及:</span>
                 <span className={`font-medium ${tooltip.whatsappPopularity === 'high' ? 'text-green-400' :
-                    tooltip.whatsappPopularity === 'medium' ? 'text-amber-400' :
-                      'text-red-400'
+                  tooltip.whatsappPopularity === 'medium' ? 'text-amber-400' :
+                    'text-red-400'
                   }`}>
                   {getWhatsappPopularityLabel(tooltip.whatsappPopularity).text}
                 </span>
