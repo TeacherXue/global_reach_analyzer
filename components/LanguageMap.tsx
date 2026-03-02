@@ -11,6 +11,7 @@ import {
 import { geoCentroid } from 'd3-geo';
 import { ArrowLeft, Globe, Info, Tag, MessageCircle, Map, Mail, Download, Search, Clock, Sun, Moon } from 'lucide-react';
 import { MAJOR_LANGUAGES, COUNTRY_LANGUAGES, getEnglishProficiencyLabel, getCountryInfo, getWhatsappPopularityLabel, MESSENGER_INFO, CountryLanguageInfo } from '../languageData';
+import CountryDetailPanel from './CountryDetailPanel';
 
 // Timezone data for countries (UTC offset in hours)
 const COUNTRY_TIMEZONES: Record<string, { offset: number; timezone: string }> = {
@@ -83,57 +84,57 @@ const geoUrl = 'https://cdn.jsdelivr.net/npm/world-atlas@2/countries-110m.json';
 // Mapping from ISO numeric codes to ISO alpha-3 codes (comprehensive list)
 const ISO_NUMERIC_TO_ALPHA3: Record<string, string> = {
   // A
-  '4': 'AFG', '8': 'ALB', '12': 'DZA', '16': 'ASM', '20': 'AND', '24': 'AGO', 
-  '28': 'ATG', '32': 'ARG', '51': 'ARM', '533': 'ABW', '36': 'AUS', '40': 'AUT', 
+  '4': 'AFG', '8': 'ALB', '12': 'DZA', '16': 'ASM', '20': 'AND', '24': 'AGO',
+  '28': 'ATG', '32': 'ARG', '51': 'ARM', '533': 'ABW', '36': 'AUS', '40': 'AUT',
   '31': 'AZE',
   // B
-  '44': 'BHS', '48': 'BHR', '50': 'BGD', '52': 'BRB', '112': 'BLR', '56': 'BEL', 
-  '84': 'BLZ', '204': 'BEN', '60': 'BMU', '64': 'BTN', '68': 'BOL', '70': 'BIH', 
-  '72': 'BWA', '76': 'BRA', '92': 'VGB', '96': 'BRN', '100': 'BGR', '854': 'BFA', 
+  '44': 'BHS', '48': 'BHR', '50': 'BGD', '52': 'BRB', '112': 'BLR', '56': 'BEL',
+  '84': 'BLZ', '204': 'BEN', '60': 'BMU', '64': 'BTN', '68': 'BOL', '70': 'BIH',
+  '72': 'BWA', '76': 'BRA', '92': 'VGB', '96': 'BRN', '100': 'BGR', '854': 'BFA',
   '108': 'BDI',
   // C
-  '116': 'KHM', '120': 'CMR', '124': 'CAN', '132': 'CPV', '136': 'CYM', '140': 'CAF', 
-  '148': 'TCD', '152': 'CHL', '156': 'CHN', '170': 'COL', '174': 'COM', '178': 'COG', 
+  '116': 'KHM', '120': 'CMR', '124': 'CAN', '132': 'CPV', '136': 'CYM', '140': 'CAF',
+  '148': 'TCD', '152': 'CHL', '156': 'CHN', '170': 'COL', '174': 'COM', '178': 'COG',
   '180': 'COD', '184': 'COK', '188': 'CRI', '191': 'HRV', '192': 'CUB', '531': 'CUW',
   '196': 'CYP', '203': 'CZE',
   // D
   '208': 'DNK', '262': 'DJI', '212': 'DMA', '214': 'DOM',
   // E
-  '218': 'ECU', '818': 'EGY', '222': 'SLV', '226': 'GNQ', '232': 'ERI', '233': 'EST', 
+  '218': 'ECU', '818': 'EGY', '222': 'SLV', '226': 'GNQ', '232': 'ERI', '233': 'EST',
   '231': 'ETH', '748': 'SWZ',
   // F
   '238': 'FLK', '234': 'FRO', '242': 'FJI', '246': 'FIN', '250': 'FRA', '254': 'GUF',
   '258': 'PYF', '260': 'ATF',
   // G
   '266': 'GAB', '270': 'GMB', '268': 'GEO', '276': 'DEU', '288': 'GHA', '292': 'GIB',
-  '300': 'GRC', '304': 'GRL', '308': 'GRD', '312': 'GLP', '316': 'GUM', '320': 'GTM', 
+  '300': 'GRC', '304': 'GRL', '308': 'GRD', '312': 'GLP', '316': 'GUM', '320': 'GTM',
   '324': 'GIN', '624': 'GNB', '328': 'GUY',
   // H
   '332': 'HTI', '336': 'VAT', '340': 'HND', '344': 'HKG', '348': 'HUN',
   // I
-  '352': 'ISL', '356': 'IND', '360': 'IDN', '364': 'IRN', '368': 'IRQ', '372': 'IRL', 
+  '352': 'ISL', '356': 'IND', '360': 'IDN', '364': 'IRN', '368': 'IRQ', '372': 'IRL',
   '833': 'IMN', '376': 'ISR', '380': 'ITA', '384': 'CIV',
   // J
   '388': 'JAM', '392': 'JPN', '832': 'JEY', '400': 'JOR',
   // K
-  '398': 'KAZ', '404': 'KEN', '296': 'KIR', '408': 'PRK', '410': 'KOR', '414': 'KWT', 
+  '398': 'KAZ', '404': 'KEN', '296': 'KIR', '408': 'PRK', '410': 'KOR', '414': 'KWT',
   '417': 'KGZ',
   // L
-  '418': 'LAO', '428': 'LVA', '422': 'LBN', '426': 'LSO', '430': 'LBR', '434': 'LBY', 
+  '418': 'LAO', '428': 'LVA', '422': 'LBN', '426': 'LSO', '430': 'LBR', '434': 'LBY',
   '438': 'LIE', '440': 'LTU', '442': 'LUX',
   // M
-  '446': 'MAC', '807': 'MKD', '450': 'MDG', '454': 'MWI', '458': 'MYS', '462': 'MDV', 
-  '466': 'MLI', '470': 'MLT', '584': 'MHL', '474': 'MTQ', '478': 'MRT', '480': 'MUS', 
-  '175': 'MYT', '484': 'MEX', '583': 'FSM', '498': 'MDA', '492': 'MCO', '496': 'MNG', 
+  '446': 'MAC', '807': 'MKD', '450': 'MDG', '454': 'MWI', '458': 'MYS', '462': 'MDV',
+  '466': 'MLI', '470': 'MLT', '584': 'MHL', '474': 'MTQ', '478': 'MRT', '480': 'MUS',
+  '175': 'MYT', '484': 'MEX', '583': 'FSM', '498': 'MDA', '492': 'MCO', '496': 'MNG',
   '499': 'MNE', '500': 'MSR', '504': 'MAR', '508': 'MOZ', '104': 'MMR',
   // N
-  '516': 'NAM', '520': 'NRU', '524': 'NPL', '528': 'NLD', '540': 'NCL', '554': 'NZL', 
+  '516': 'NAM', '520': 'NRU', '524': 'NPL', '528': 'NLD', '540': 'NCL', '554': 'NZL',
   '558': 'NIC', '562': 'NER', '566': 'NGA', '570': 'NIU', '574': 'NFK', '580': 'MNP',
   '578': 'NOR',
   // O
   '512': 'OMN',
   // P
-  '586': 'PAK', '585': 'PLW', '275': 'PSE', '591': 'PAN', '598': 'PNG', '600': 'PRY', 
+  '586': 'PAK', '585': 'PLW', '275': 'PSE', '591': 'PAN', '598': 'PNG', '600': 'PRY',
   '604': 'PER', '608': 'PHL', '612': 'PCN', '616': 'POL', '620': 'PRT', '630': 'PRI',
   // Q
   '634': 'QAT',
@@ -141,17 +142,17 @@ const ISO_NUMERIC_TO_ALPHA3: Record<string, string> = {
   '638': 'REU', '642': 'ROU', '643': 'RUS', '646': 'RWA',
   // S
   '652': 'BLM', '654': 'SHN', '659': 'KNA', '662': 'LCA', '663': 'MAF', '666': 'SPM',
-  '670': 'VCT', '882': 'WSM', '674': 'SMR', '678': 'STP', '682': 'SAU', '686': 'SEN', 
+  '670': 'VCT', '882': 'WSM', '674': 'SMR', '678': 'STP', '682': 'SAU', '686': 'SEN',
   '688': 'SRB', '690': 'SYC', '694': 'SLE', '702': 'SGP', '534': 'SXM', '703': 'SVK',
-  '705': 'SVN', '90': 'SLB', '706': 'SOM', '710': 'ZAF', '239': 'SGS', '728': 'SSD', 
-  '724': 'ESP', '144': 'LKA', '729': 'SDN', '740': 'SUR', '744': 'SJM', '752': 'SWE', 
+  '705': 'SVN', '90': 'SLB', '706': 'SOM', '710': 'ZAF', '239': 'SGS', '728': 'SSD',
+  '724': 'ESP', '144': 'LKA', '729': 'SDN', '740': 'SUR', '744': 'SJM', '752': 'SWE',
   '756': 'CHE', '760': 'SYR',
   // T
-  '158': 'TWN', '762': 'TJK', '834': 'TZA', '764': 'THA', '626': 'TLS', '768': 'TGO', 
+  '158': 'TWN', '762': 'TJK', '834': 'TZA', '764': 'THA', '626': 'TLS', '768': 'TGO',
   '772': 'TKL', '776': 'TON', '780': 'TTO', '788': 'TUN', '792': 'TUR', '795': 'TKM',
   '796': 'TCA', '798': 'TUV',
   // U
-  '800': 'UGA', '804': 'UKR', '784': 'ARE', '826': 'GBR', '840': 'USA', '858': 'URY', 
+  '800': 'UGA', '804': 'UKR', '784': 'ARE', '826': 'GBR', '840': 'USA', '858': 'URY',
   '860': 'UZB',
   // V
   '548': 'VUT', '862': 'VEN', '704': 'VNM', '850': 'VIR',
@@ -206,6 +207,7 @@ const LanguageMap: React.FC = () => {
   const searchInputRef = useRef<HTMLInputElement>(null);
   const searchResultsRef = useRef<HTMLDivElement>(null);
   const geographiesRef = useRef<any[]>([]);
+  const [selectedCountryIso3, setSelectedCountryIso3] = useState<string | null>(null);
   // Save the initial position when component first mounts (East longitude 150 degrees)
   const initialPosition = useMemo(() => ({ coordinates: [150, 0] as [number, number], zoom: 1 }), []);
 
@@ -231,7 +233,7 @@ const LanguageMap: React.FC = () => {
   const getCountryTime = useCallback((iso3: string) => {
     const tzInfo = COUNTRY_TIMEZONES[iso3];
     if (!tzInfo) return null;
-    
+
     try {
       const formatter = new Intl.DateTimeFormat('zh-CN', {
         timeZone: tzInfo.timezone,
@@ -240,7 +242,7 @@ const LanguageMap: React.FC = () => {
         hour12: false,
       });
       const timeStr = formatter.format(currentTime);
-      
+
       // Get day/night status
       const hourFormatter = new Intl.DateTimeFormat('en-US', {
         timeZone: tzInfo.timezone,
@@ -250,7 +252,7 @@ const LanguageMap: React.FC = () => {
       const hour = parseInt(hourFormatter.format(currentTime));
       const isDaytime = hour >= 6 && hour < 18;
       const isWorkHour = hour >= 9 && hour < 18;
-      
+
       return { timeStr, isDaytime, isWorkHour, hour };
     } catch {
       return null;
@@ -261,12 +263,12 @@ const LanguageMap: React.FC = () => {
   const getBestContactTime = useCallback((iso3: string) => {
     const tzInfo = COUNTRY_TIMEZONES[iso3];
     if (!tzInfo) return null;
-    
+
     // Calculate Beijing time when it's 9:00-10:00 local time (best morning time)
     const offsetDiff = 8 - tzInfo.offset; // Beijing is UTC+8
     const morningBj = ((9 + offsetDiff) % 24 + 24) % 24;
     const afternoonBj = ((14 + offsetDiff) % 24 + 24) % 24;
-    
+
     return {
       morningBj: `${String(morningBj).padStart(2, '0')}:00`,
       afternoonBj: `${String(afternoonBj).padStart(2, '0')}:00`,
@@ -287,8 +289,8 @@ const LanguageMap: React.FC = () => {
     }
     const lowerTerm = term.toLowerCase();
     const results = Object.values(COUNTRY_LANGUAGES).filter(
-      (c) => c.name.toLowerCase().includes(lowerTerm) || 
-             c.nameEn.toLowerCase().includes(lowerTerm)
+      (c) => c.name.toLowerCase().includes(lowerTerm) ||
+        c.nameEn.toLowerCase().includes(lowerTerm)
     ).slice(0, 10);
     setSearchResults(results);
     setShowSearchResults(true);
@@ -300,7 +302,7 @@ const LanguageMap: React.FC = () => {
       '国家', 'Country', '国旗', '母语', '第二语言', '英语水平',
       'Google地图语言', '开发信语言', '备选语言', '推荐IM', 'WhatsApp普及度', '商务建议'
     ];
-    
+
     const rows = Object.values(COUNTRY_LANGUAGES).map((c) => {
       const info = getCountryInfo(c.iso3);
       if (!info) return [];
@@ -310,24 +312,24 @@ const LanguageMap: React.FC = () => {
         info.flag,
         info.primaryLanguage,
         info.secondaryLanguages.join('; '),
-        info.englishProficiency === 'native' ? '母语' : 
-          info.englishProficiency === 'high' ? '高' : 
-          info.englishProficiency === 'medium' ? '中' : '低',
+        info.englishProficiency === 'native' ? '母语' :
+          info.englishProficiency === 'high' ? '高' :
+            info.englishProficiency === 'medium' ? '中' : '低',
         info.googleMapsLang,
         info.businessLang,
         info.businessLangAlt || '',
         MESSENGER_INFO[info.preferredMessenger]?.name || '',
-        info.whatsappPopularity === 'high' ? '普及' : 
+        info.whatsappPopularity === 'high' ? '普及' :
           info.whatsappPopularity === 'medium' ? '一般' : '较少',
         info.businessNote || ''
       ];
     });
-    
+
     const csvContent = [
       headers.join(','),
       ...rows.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
     ].join('\n');
-    
+
     const BOM = '\uFEFF';
     const blob = new Blob([BOM + csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -357,33 +359,33 @@ const LanguageMap: React.FC = () => {
   const getIso3 = useCallback((geo: any): string => {
     const geoId = geo.id;
     const numericId = String(geoId);
-    
+
     // Remove leading zeros for lookup (e.g., '036' -> '36')
     const numericIdNoLeadingZeros = String(parseInt(numericId, 10));
-    
+
     // 1. First try numeric ID mapping with original format
     if (ISO_NUMERIC_TO_ALPHA3[numericId]) {
       return ISO_NUMERIC_TO_ALPHA3[numericId];
     }
-    
+
     // 2. Try without leading zeros (world-atlas uses '036' but our map has '36')
     if (ISO_NUMERIC_TO_ALPHA3[numericIdNoLeadingZeros]) {
       return ISO_NUMERIC_TO_ALPHA3[numericIdNoLeadingZeros];
     }
-    
+
     // 3. Check if geo.id is already a 3-letter ISO code
     if (typeof geoId === 'string' && /^[A-Z]{3}$/.test(geoId)) {
       return geoId;
     }
-    
+
     // 4. Try ISO_A3 property from various possible property names
     const props = geo.properties || {};
-    const possibleIso3 = props.ISO_A3 || props.iso_a3 || props.ISO3 || props.iso3 || 
-                         props.ADM0_A3 || props.adm0_a3 || props.ISO_A3_EH;
+    const possibleIso3 = props.ISO_A3 || props.iso_a3 || props.ISO3 || props.iso3 ||
+      props.ADM0_A3 || props.adm0_a3 || props.ISO_A3_EH;
     if (possibleIso3 && possibleIso3 !== '-99' && /^[A-Z]{3}$/.test(possibleIso3)) {
       return possibleIso3;
     }
-    
+
     // 5. Fallback
     return numericId;
   }, []);
@@ -395,7 +397,7 @@ const LanguageMap: React.FC = () => {
       const geoIso3 = getIso3(g);
       return geoIso3 === iso3;
     });
-    
+
     if (geo) {
       try {
         const centroid = geoCentroid(geo);
@@ -446,7 +448,7 @@ const LanguageMap: React.FC = () => {
         }
         break;
       case 'Escape':
-    e.preventDefault();
+        e.preventDefault();
         setShowSearchResults(false);
         setSelectedIndex(-1);
         break;
@@ -459,7 +461,7 @@ const LanguageMap: React.FC = () => {
     const countryInfo = getCountryInfo(iso3);
     const timeInfo = getCountryTime(iso3);
     const contactTime = getBestContactTime(iso3);
-    
+
     if (countryInfo) {
       const englishLabel = getEnglishProficiencyLabel(countryInfo.englishProficiency);
       setTooltip({
@@ -531,7 +533,7 @@ const LanguageMap: React.FC = () => {
       '德语': '#F97316',      // German - orange
       '日语': '#6366F1',      // Japanese - indigo
       '印地语': '#84CC16',    // Hindi - lime
-      
+
       // 东亚/东南亚 - 中国重要贸易伙伴
       '韩语': '#0EA5E9',      // Korean - sky blue
       '越南语': '#22C55E',    // Vietnamese - green
@@ -544,27 +546,27 @@ const LanguageMap: React.FC = () => {
       '高棉语': '#7C3AED',    // Khmer - violet
       '老挝语': '#059669',    // Lao - emerald-600
       '蒙古语': '#0284C7',    // Mongolian - sky-600
-      
+
       // 南亚 - 重要贸易伙伴
       '孟加拉语': '#16A34A',  // Bengali - green-600
       '乌尔都语': '#15803D',  // Urdu - green-700
       '尼泊尔语': '#EA580C',  // Nepali - orange-600
       '僧伽罗语': '#B91C1C',  // Sinhala - red-700
       '泰米尔语': '#C026D3',  // Tamil - fuchsia
-      
+
       // 中亚 - 一带一路重要区域
       '哈萨克语': '#0369A1',  // Kazakh - sky-700
       '乌兹别克语': '#0F766E', // Uzbek - teal-700
       '土库曼语': '#047857',  // Turkmen - emerald-700
       '塔吉克语': '#7E22CE',  // Tajik - purple-700
       '吉尔吉斯语': '#1D4ED8', // Kyrgyz - blue-700
-      
+
       // 中东 - 重要贸易伙伴
       '波斯语': '#B45309',    // Persian - amber-700
       '土耳其语': '#E11D48',  // Turkish - rose
       '希伯来语': '#2563EB',  // Hebrew - blue-600
       '库尔德语': '#65A30D',  // Kurdish - lime-600
-      
+
       // 欧洲 - 重要贸易伙伴
       '荷兰语': '#FB923C',    // Dutch - orange-400
       '意大利语': '#059669',  // Italian - emerald-600
@@ -578,7 +580,7 @@ const LanguageMap: React.FC = () => {
       '丹麦语': '#BE123C',    // Danish - rose-700
       '芬兰语': '#0C4A6E',    // Finnish - sky-900
       '挪威语': '#0F172A',    // Norwegian - slate-900
-      
+
       // 非洲 - 新兴市场
       '斯瓦希里语': '#15803D', // Swahili - green-700
       '豪萨语': '#A16207',    // Hausa - yellow-700
@@ -601,7 +603,7 @@ const LanguageMap: React.FC = () => {
       }
       return '#E2E8F0';
     }
-    
+
     // Default coloring strictly based on primaryLanguage (native language)
     if (countryInfo && countryInfo.primaryLanguage) {
       const color = getPrimaryLanguageColor(countryInfo.primaryLanguage);
@@ -632,47 +634,45 @@ const LanguageMap: React.FC = () => {
                 <h1 className="text-xl font-bold text-white">世界语言地图 Language Map</h1>
               </div>
             </div>
-            
+
             <div className="flex items-center gap-4">
               {/* Toggle Labels Button */}
               <button
                 onClick={() => setShowLabels(!showLabels)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                  showLabels 
-                    ? 'bg-blue-600 text-white' 
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${showLabels
+                    ? 'bg-blue-600 text-white'
                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                }`}
+                  }`}
               >
                 <Tag className="w-4 h-4" />
                 国名
               </button>
-              
+
               {/* Toggle Timezone Button */}
               <button
                 onClick={() => setShowTimezones(!showTimezones)}
-                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${
-                  showTimezones 
-                    ? 'bg-amber-600 text-white' 
+                className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${showTimezones
+                    ? 'bg-amber-600 text-white'
                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                }`}
+                  }`}
               >
                 <Clock className="w-4 h-4" />
                 时区
               </button>
-              
+
               {/* Beijing Time Display */}
               <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-red-900/50 rounded-lg text-sm">
                 <span className="text-red-400">🇨🇳 北京</span>
                 <span className="text-white font-mono font-bold">
-                  {currentTime.toLocaleTimeString('zh-CN', { 
-                    hour: '2-digit', 
+                  {currentTime.toLocaleTimeString('zh-CN', {
+                    hour: '2-digit',
                     minute: '2-digit',
                     hour12: false,
                     timeZone: 'Asia/Shanghai'
                   })}
                 </span>
               </div>
-              
+
               {/* Legend - Primary Language Colors - Expanded */}
               {!selectedLanguage && (
                 <div className="hidden lg:flex items-center gap-2 text-xs flex-wrap">
@@ -690,8 +690,8 @@ const LanguageMap: React.FC = () => {
                     { name: '其他', color: '#94A3B8' },
                   ].map((lang) => (
                     <div key={lang.name} className="flex items-center gap-1">
-                      <span 
-                        className="w-2.5 h-2.5 rounded" 
+                      <span
+                        className="w-2.5 h-2.5 rounded"
                         style={{ backgroundColor: lang.color }}
                       ></span>
                       <span className="text-slate-300">{lang.name}</span>
@@ -723,7 +723,7 @@ const LanguageMap: React.FC = () => {
               />
               {/* Search Results Dropdown */}
               {showSearchResults && searchResults.length > 0 && (
-                <div 
+                <div
                   ref={searchResultsRef}
                   className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto"
                 >
@@ -733,11 +733,10 @@ const LanguageMap: React.FC = () => {
                     return (
                       <div
                         key={country.iso3}
-                        className={`px-4 py-3 cursor-pointer border-b border-slate-700 last:border-b-0 transition-colors ${
-                          isSelected 
-                            ? 'bg-blue-600 text-white' 
+                        className={`px-4 py-3 cursor-pointer border-b border-slate-700 last:border-b-0 transition-colors ${isSelected
+                            ? 'bg-blue-600 text-white'
                             : 'hover:bg-slate-700'
-                        }`}
+                          }`}
                         onClick={() => {
                           setShowSearchResults(false);
                           setSelectedIndex(-1);
@@ -763,7 +762,7 @@ const LanguageMap: React.FC = () => {
                 </div>
               )}
             </div>
-            
+
             {/* Export Button */}
             <button
               onClick={() => exportToCSV()}
@@ -773,38 +772,36 @@ const LanguageMap: React.FC = () => {
               导出CSV
             </button>
           </div>
-          
+
           {/* Language Filter Buttons */}
           <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-hide">
             <button
               onClick={() => setSelectedLanguage(null)}
-              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${
-                selectedLanguage === null
+              className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${selectedLanguage === null
                   ? 'bg-white text-slate-900 shadow-lg'
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
+                }`}
             >
               全部 All
             </button>
-          {MAJOR_LANGUAGES.map((lang) => (
-            <button
-              key={lang.id}
+            {MAJOR_LANGUAGES.map((lang) => (
+              <button
+                key={lang.id}
                 onClick={() => setSelectedLanguage(lang.id === selectedLanguage ? null : lang.id)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
-                selectedLanguage === lang.id
+                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${selectedLanguage === lang.id
                     ? 'text-white shadow-lg'
                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-              }`}
+                  }`}
                 style={{
                   backgroundColor: selectedLanguage === lang.id ? lang.color : undefined,
                 }}
-            >
-              {lang.name}
+              >
+                {lang.name}
                 <span className="text-xs opacity-70">{lang.nameEn}</span>
-            </button>
-          ))}
+              </button>
+            ))}
           </div>
-          
+
           {selectedLanguage && (
             <div className="mt-2 text-sm text-slate-400">
               高亮显示: 使用
@@ -818,9 +815,9 @@ const LanguageMap: React.FC = () => {
       </div>
 
       {/* Map Container */}
-      <div 
-        className="relative" 
-        style={{ height: 'calc(100vh - 180px)' }}
+      <div
+        className="relative transition-all duration-300"
+        style={{ height: 'calc(100vh - 180px)', marginRight: selectedCountryIso3 ? '440px' : '0' }}
         onMouseMove={handleMouseMove}
       >
         <ComposableMap
@@ -845,102 +842,107 @@ const LanguageMap: React.FC = () => {
                 if (geographies.length > 0) {
                   geographiesRef.current = geographies;
                 }
-                
+
                 return (
-                <>
-                  {geographies.map((geo) => {
-                    const iso3 = getIso3(geo);
-                    const isHighlighted = highlightedCountries.has(iso3);
-                  return (
-                    <Geography
-                      key={geo.rsmKey}
-                      geography={geo}
-                        onMouseEnter={(event) => handleMouseEnter(geo, event)}
-                        onMouseLeave={handleMouseLeave}
-                      style={{
-                        default: {
-                            fill: getFillColor(geo),
-                            stroke: '#334155',
-                          strokeWidth: 0.5,
-                          outline: 'none',
-                            transition: 'fill 0.2s',
-                        },
-                        hover: {
-                            fill: selectedLanguage && !isHighlighted
-                              ? '#94A3B8'
-                              : '#60A5FA',
-                            stroke: '#1E293B',
-                          strokeWidth: 1,
-                          outline: 'none',
-                          cursor: 'pointer',
-                        },
-                        pressed: {
-                            fill: '#2563EB',
-                          outline: 'none',
-                        },
-                      }}
-                    />
-                  );
-                  })}
-                  {/* Country Labels */}
-                  {showLabels && geographies.map((geo) => {
-                    const iso3 = getIso3(geo);
-                    const countryInfo = COUNTRY_LANGUAGES[iso3];
-                    if (!countryInfo) return null;
-                    
-                    const centroid = geoCentroid(geo);
-                    // Skip if centroid is invalid
-                    if (isNaN(centroid[0]) || isNaN(centroid[1])) return null;
-                    
-                    // Calculate font size based on zoom level - larger base size
-                    const baseFontSize = 8;
-                    const fontSize = Math.max(baseFontSize / position.zoom, 2.5);
-                    
-                    // Only show labels when zoomed in enough or for larger countries
-                    const minZoomForSmallCountries = 2;
-                    const isLargeCountry = ['CHN', 'USA', 'RUS', 'CAN', 'AUS', 'BRA', 'IND', 'ARG', 'KAZ', 'DZA', 'COD', 'SAU', 'MEX', 'IDN', 'SDN', 'LBY', 'IRN', 'MNG', 'PER', 'TCD', 'NER', 'AGO', 'MLI', 'ZAF', 'COL', 'ETH', 'BOL', 'MRT', 'EGY', 'TZA', 'NGA', 'VEN', 'PAK', 'TUR', 'CHL', 'MMR', 'AFG', 'SOM', 'CAF', 'UKR', 'MOZ', 'BWA', 'YEM', 'TKM', 'CMR', 'IRQ', 'JPN', 'DEU', 'FRA', 'ESP', 'SWE', 'NOR', 'FIN', 'POL', 'ITA', 'GBR', 'PHL', 'VNM', 'MYS', 'THA', 'KOR', 'PRK', 'UZB', 'MAR', 'KEN', 'GHA', 'CIV', 'MDG', 'NPL', 'BGD'].includes(iso3);
-                    
-                    if (position.zoom < minZoomForSmallCountries && !isLargeCountry) {
-                      return null;
-                    }
-                    
-                    // Get short name (first part before space or full name)
-                    const shortName = countryInfo.name.split(' ')[0];
-                    
-                    return (
-                      <Marker key={`label-${geo.rsmKey}`} coordinates={centroid}>
-                        <text
-                          textAnchor="middle"
-                          style={{
-                            fontFamily: 'system-ui, sans-serif',
-                            fontSize: `${fontSize}px`,
-                            fill: '#1E293B',
-                            fontWeight: 600,
-                            pointerEvents: 'none',
-                            textShadow: '0 0 2px rgba(255,255,255,0.8), 0 0 4px rgba(255,255,255,0.6)',
+                  <>
+                    {geographies.map((geo) => {
+                      const iso3 = getIso3(geo);
+                      const isHighlighted = highlightedCountries.has(iso3);
+                      return (
+                        <Geography
+                          key={geo.rsmKey}
+                          geography={geo}
+                          onMouseEnter={(event) => handleMouseEnter(geo, event)}
+                          onMouseLeave={handleMouseLeave}
+                          onClick={() => {
+                            const clickedIso3 = getIso3(geo);
+                            setSelectedCountryIso3(clickedIso3);
+                            setTooltip(null);
                           }}
-                        >
-                          {shortName}
-                        </text>
-                      </Marker>
-                    );
-                  })}
-                </>
+                          style={{
+                            default: {
+                              fill: selectedCountryIso3 === iso3 ? '#3B82F6' : getFillColor(geo),
+                              stroke: selectedCountryIso3 === iso3 ? '#60A5FA' : '#334155',
+                              strokeWidth: selectedCountryIso3 === iso3 ? 1.5 : 0.5,
+                              outline: 'none',
+                              transition: 'fill 0.2s',
+                            },
+                            hover: {
+                              fill: selectedLanguage && !isHighlighted
+                                ? '#94A3B8'
+                                : '#60A5FA',
+                              stroke: '#1E293B',
+                              strokeWidth: 1,
+                              outline: 'none',
+                              cursor: 'pointer',
+                            },
+                            pressed: {
+                              fill: '#2563EB',
+                              outline: 'none',
+                            },
+                          }}
+                        />
+                      );
+                    })}
+                    {/* Country Labels */}
+                    {showLabels && geographies.map((geo) => {
+                      const iso3 = getIso3(geo);
+                      const countryInfo = COUNTRY_LANGUAGES[iso3];
+                      if (!countryInfo) return null;
+
+                      const centroid = geoCentroid(geo);
+                      // Skip if centroid is invalid
+                      if (isNaN(centroid[0]) || isNaN(centroid[1])) return null;
+
+                      // Calculate font size based on zoom level - larger base size
+                      const baseFontSize = 8;
+                      const fontSize = Math.max(baseFontSize / position.zoom, 2.5);
+
+                      // Only show labels when zoomed in enough or for larger countries
+                      const minZoomForSmallCountries = 2;
+                      const isLargeCountry = ['CHN', 'USA', 'RUS', 'CAN', 'AUS', 'BRA', 'IND', 'ARG', 'KAZ', 'DZA', 'COD', 'SAU', 'MEX', 'IDN', 'SDN', 'LBY', 'IRN', 'MNG', 'PER', 'TCD', 'NER', 'AGO', 'MLI', 'ZAF', 'COL', 'ETH', 'BOL', 'MRT', 'EGY', 'TZA', 'NGA', 'VEN', 'PAK', 'TUR', 'CHL', 'MMR', 'AFG', 'SOM', 'CAF', 'UKR', 'MOZ', 'BWA', 'YEM', 'TKM', 'CMR', 'IRQ', 'JPN', 'DEU', 'FRA', 'ESP', 'SWE', 'NOR', 'FIN', 'POL', 'ITA', 'GBR', 'PHL', 'VNM', 'MYS', 'THA', 'KOR', 'PRK', 'UZB', 'MAR', 'KEN', 'GHA', 'CIV', 'MDG', 'NPL', 'BGD'].includes(iso3);
+
+                      if (position.zoom < minZoomForSmallCountries && !isLargeCountry) {
+                        return null;
+                      }
+
+                      // Get short name (first part before space or full name)
+                      const shortName = countryInfo.name.split(' ')[0];
+
+                      return (
+                        <Marker key={`label-${geo.rsmKey}`} coordinates={centroid}>
+                          <text
+                            textAnchor="middle"
+                            style={{
+                              fontFamily: 'system-ui, sans-serif',
+                              fontSize: `${fontSize}px`,
+                              fill: '#1E293B',
+                              fontWeight: 600,
+                              pointerEvents: 'none',
+                              textShadow: '0 0 2px rgba(255,255,255,0.8), 0 0 4px rgba(255,255,255,0.6)',
+                            }}
+                          >
+                            {shortName}
+                          </text>
+                        </Marker>
+                      );
+                    })}
+                  </>
                 );
               }}
             </Geographies>
-            
+
             {/* Small Country Markers */}
             {SMALL_COUNTRY_MARKERS.map((country) => {
               const countryInfo = getCountryInfo(country.iso3);
               const rawCountryInfo = COUNTRY_LANGUAGES[country.iso3];
               const isHighlighted = highlightedCountries.has(country.iso3);
-              
+
               // Get color based on primary language
               const getMarkerColor = () => {
                 if (selectedLanguage) {
-                  return isHighlighted 
-                    ? MAJOR_LANGUAGES.find(l => l.id === selectedLanguage)?.color || '#3B82F6' 
+                  return isHighlighted
+                    ? MAJOR_LANGUAGES.find(l => l.id === selectedLanguage)?.color || '#3B82F6'
                     : '#94A3B8';
                 }
                 if (rawCountryInfo && rawCountryInfo.languages.length > 0) {
@@ -949,18 +951,22 @@ const LanguageMap: React.FC = () => {
                 }
                 return '#94A3B8';
               };
-              
+
               return (
-                <Marker 
-                  key={`small-${country.iso3}`} 
+                <Marker
+                  key={`small-${country.iso3}`}
                   coordinates={country.coordinates}
                 >
                   <circle
                     r={position.zoom > 2 ? 8 / position.zoom : 4}
                     fill={getMarkerColor()}
-                    stroke="#1E293B"
-                    strokeWidth={1 / position.zoom}
+                    stroke={selectedCountryIso3 === country.iso3 ? '#60A5FA' : '#1E293B'}
+                    strokeWidth={selectedCountryIso3 === country.iso3 ? 2 / position.zoom : 1 / position.zoom}
                     style={{ cursor: 'pointer' }}
+                    onClick={() => {
+                      setSelectedCountryIso3(country.iso3);
+                      setTooltip(null);
+                    }}
                     onMouseEnter={(event: React.MouseEvent) => {
                       if (countryInfo) {
                         const englishLabel = getEnglishProficiencyLabel(countryInfo.englishProficiency);
@@ -1012,7 +1018,7 @@ const LanguageMap: React.FC = () => {
                 </Marker>
               );
             })}
-            
+
             {/* Timezone Lines */}
             {showTimezones && (
               <>
@@ -1021,7 +1027,7 @@ const LanguageMap: React.FC = () => {
                   const longitude = utcOffset * 15; // Each timezone is 15 degrees
                   const isMainLine = utcOffset % 3 === 0;
                   const isChinaLine = utcOffset === 8; // Beijing time
-                  
+
                   return (
                     <g key={`tz-${utcOffset}`}>
                       <Line
@@ -1094,41 +1100,40 @@ const LanguageMap: React.FC = () => {
                 <div className="text-slate-400 text-sm">{tooltip.nameEn}</div>
               </div>
             </div>
-            
+
             {/* Language Info */}
             <div className="space-y-1.5 text-sm border-b border-slate-600 pb-3 mb-3">
               <div className="flex justify-between gap-6">
-                    <span className="text-slate-400">母语:</span>
+                <span className="text-slate-400">母语:</span>
                 <span className="text-white font-medium">{tooltip.primaryLanguage}</span>
-                  </div>
-              
+              </div>
+
               {tooltip.secondaryLanguages.length > 0 && (
                 <div className="flex justify-between gap-6">
-                    <span className="text-slate-400">第二语言:</span>
+                  <span className="text-slate-400">第二语言:</span>
                   <span className="text-white font-medium">{tooltip.secondaryLanguages.join(', ')}</span>
                 </div>
               )}
-              
+
               <div className="flex justify-between gap-6">
                 <span className="text-slate-400">英语水平:</span>
-                <span className={`font-medium ${
-                  tooltip.englishProficiency === '母语' ? 'text-green-400' :
-                  tooltip.englishProficiency === '高' ? 'text-blue-400' :
-                  tooltip.englishProficiency === '中' ? 'text-amber-400' :
-                  tooltip.englishProficiency === '低' ? 'text-red-400' :
-                  'text-slate-400'
-                }`}>
+                <span className={`font-medium ${tooltip.englishProficiency === '母语' ? 'text-green-400' :
+                    tooltip.englishProficiency === '高' ? 'text-blue-400' :
+                      tooltip.englishProficiency === '中' ? 'text-amber-400' :
+                        tooltip.englishProficiency === '低' ? 'text-red-400' :
+                          'text-slate-400'
+                  }`}>
                   {tooltip.englishProficiency}
                 </span>
               </div>
             </div>
-            
+
             {/* Business Info */}
             <div className="space-y-1.5 text-sm">
               <div className="text-xs text-blue-400 font-semibold uppercase tracking-wider mb-2">
                 📧 商务沟通建议
               </div>
-              
+
               <div className="flex justify-between gap-6">
                 <span className="text-slate-400 flex items-center gap-1">
                   <Mail className="w-3 h-3" />
@@ -1136,14 +1141,14 @@ const LanguageMap: React.FC = () => {
                 </span>
                 <span className="text-green-400 font-bold">{tooltip.businessLang}</span>
               </div>
-              
+
               {tooltip.businessLangAlt && (
                 <div className="flex justify-between gap-6">
                   <span className="text-slate-400">备选语言:</span>
                   <span className="text-slate-300">{tooltip.businessLangAlt}</span>
                 </div>
               )}
-              
+
               <div className="flex justify-between gap-6">
                 <span className="text-slate-400 flex items-center gap-1">
                   <Map className="w-3 h-3" />
@@ -1151,7 +1156,7 @@ const LanguageMap: React.FC = () => {
                 </span>
                 <span className="text-white">{tooltip.googleMapsLang}</span>
               </div>
-              
+
               <div className="flex justify-between gap-6">
                 <span className="text-slate-400 flex items-center gap-1">
                   <MessageCircle className="w-3 h-3" />
@@ -1159,34 +1164,33 @@ const LanguageMap: React.FC = () => {
                 </span>
                 <span className="text-white">
                   {MESSENGER_INFO[tooltip.preferredMessenger]?.icon} {MESSENGER_INFO[tooltip.preferredMessenger]?.name}
-                    </span>
-                  </div>
-              
+                </span>
+              </div>
+
               <div className="flex justify-between gap-6">
                 <span className="text-slate-400">WhatsApp普及:</span>
-                <span className={`font-medium ${
-                  tooltip.whatsappPopularity === 'high' ? 'text-green-400' :
-                  tooltip.whatsappPopularity === 'medium' ? 'text-amber-400' :
-                  'text-red-400'
-                }`}>
+                <span className={`font-medium ${tooltip.whatsappPopularity === 'high' ? 'text-green-400' :
+                    tooltip.whatsappPopularity === 'medium' ? 'text-amber-400' :
+                      'text-red-400'
+                  }`}>
                   {getWhatsappPopularityLabel(tooltip.whatsappPopularity).text}
-                    </span>
-                  </div>
-              
+                </span>
+              </div>
+
               {tooltip.businessNote && (
                 <div className="mt-2 p-2 bg-slate-700/50 rounded text-xs text-slate-300 italic">
                   💡 {tooltip.businessNote}
                 </div>
               )}
             </div>
-            
+
             {/* Time Info */}
             {tooltip.localTime && (
               <div className="border-t border-slate-600 pt-3 mt-3 space-y-1.5 text-sm">
                 <div className="text-xs text-amber-400 font-semibold uppercase tracking-wider mb-2">
                   ⏰ 时间信息
                 </div>
-                
+
                 <div className="flex justify-between gap-6">
                   <span className="text-slate-400 flex items-center gap-1">
                     <Clock className="w-3 h-3" />
@@ -1204,13 +1208,13 @@ const LanguageMap: React.FC = () => {
                     )}
                   </span>
                 </div>
-                
+
                 {tooltip.utcOffset && (
                   <div className="flex justify-between gap-6">
                     <span className="text-slate-400">时区:</span>
                     <span className="text-slate-300 font-mono">{tooltip.utcOffset}</span>
-          </div>
-        )}
+                  </div>
+                )}
 
                 <div className="mt-2 p-2 bg-amber-900/30 rounded">
                   <div className="text-xs text-amber-300 mb-1">🇨🇳 最佳联系时间 (北京时间)</div>
@@ -1223,13 +1227,19 @@ const LanguageMap: React.FC = () => {
                       <Moon className="w-3 h-3 inline mr-1 text-blue-400" />
                       午后: <span className="text-white font-bold">{tooltip.afternoonBj}</span>
                     </span>
-            </div>
-          </div>
-        </div>
+                  </div>
+                </div>
+              </div>
             )}
-        </div>
+          </div>
         )}
       </div>
+
+      {/* Country Detail Side Panel */}
+      <CountryDetailPanel
+        iso3={selectedCountryIso3}
+        onClose={() => setSelectedCountryIso3(null)}
+      />
     </div>
   );
 };
