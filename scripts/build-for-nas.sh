@@ -5,6 +5,11 @@
 
 set -e
 
+# 获取脚本所在目录，然后切换到项目根目录
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
+cd "$PROJECT_ROOT"
+
 IMAGE_NAME="global-reach-analyzer"
 IMAGE_TAG="latest"
 OUTPUT_FILE="${IMAGE_NAME}.tar"

@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo, useEffect } from 'react';
+import React, { useState, useCallback, useMemo, useEffect, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   ComposableMap,
@@ -195,13 +195,19 @@ const LanguageMap: React.FC = () => {
   const navigate = useNavigate();
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<TooltipContent | null>(null);
-  const [position, setPosition] = useState({ coordinates: [0, 0] as [number, number], zoom: 1 });
+  const [position, setPosition] = useState({ coordinates: [150, 0] as [number, number], zoom: 1 });
   const [showLabels, setShowLabels] = useState(true);
   const [showTimezones, setShowTimezones] = useState(false);
   const [currentTime, setCurrentTime] = useState(new Date());
   const [searchTerm, setSearchTerm] = useState('');
   const [searchResults, setSearchResults] = useState<CountryLanguageInfo[]>([]);
   const [showSearchResults, setShowSearchResults] = useState(false);
+  const [selectedIndex, setSelectedIndex] = useState(-1);
+  const searchInputRef = useRef<HTMLInputElement>(null);
+  const searchResultsRef = useRef<HTMLDivElement>(null);
+  const geographiesRef = useRef<any[]>([]);
+  // Save the initial position when component first mounts (East longitude 150 degrees)
+  const initialPosition = useMemo(() => ({ coordinates: [150, 0] as [number, number], zoom: 1 }), []);
 
   // Update current time every minute
   useEffect(() => {
@@ -210,6 +216,16 @@ const LanguageMap: React.FC = () => {
     }, 60000);
     return () => clearInterval(timer);
   }, []);
+
+  // Scroll to selected item when using keyboard
+  useEffect(() => {
+    if (selectedIndex >= 0 && searchResultsRef.current) {
+      const selectedElement = searchResultsRef.current.children[selectedIndex] as HTMLElement;
+      if (selectedElement) {
+        selectedElement.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+      }
+    }
+  }, [selectedIndex]);
 
   // Get local time for a country
   const getCountryTime = useCallback((iso3: string) => {
@@ -261,9 +277,12 @@ const LanguageMap: React.FC = () => {
   // Search countries
   const handleSearch = useCallback((term: string) => {
     setSearchTerm(term);
+    setSelectedIndex(-1); // Reset selection when search changes
     if (term.length < 1) {
       setSearchResults([]);
       setShowSearchResults(false);
+      // 清空搜索框时恢复到初始位置（页面第一次加载时的位置）
+      setPosition(initialPosition);
       return;
     }
     const lowerTerm = term.toLowerCase();
@@ -273,7 +292,7 @@ const LanguageMap: React.FC = () => {
     ).slice(0, 10);
     setSearchResults(results);
     setShowSearchResults(true);
-  }, []);
+  }, [initialPosition]);
 
   // Export to CSV
   const exportToCSV = useCallback(() => {
@@ -368,6 +387,71 @@ const LanguageMap: React.FC = () => {
     // 5. Fallback
     return numericId;
   }, []);
+
+  // Focus on a country by ISO3 code
+  const focusOnCountry = useCallback((iso3: string) => {
+    // Find the geography object for this country
+    const geo = geographiesRef.current.find((g) => {
+      const geoIso3 = getIso3(g);
+      return geoIso3 === iso3;
+    });
+    
+    if (geo) {
+      try {
+        const centroid = geoCentroid(geo);
+        // Set map position to country center with zoom level 3
+        setPosition({
+          coordinates: centroid as [number, number],
+          zoom: 3,
+        });
+      } catch (error) {
+        console.error('Error focusing on country:', error);
+      }
+    } else {
+      // If not found in main geographies, check small country markers
+      const smallCountry = SMALL_COUNTRY_MARKERS.find((c) => c.iso3 === iso3);
+      if (smallCountry) {
+        setPosition({
+          coordinates: smallCountry.coordinates as [number, number],
+          zoom: 3,
+        });
+      }
+    }
+  }, [getIso3]);
+
+  // Handle keyboard navigation in search results
+  const handleSearchKeyDown = useCallback((e: React.KeyboardEvent<HTMLInputElement>) => {
+    if (!showSearchResults || searchResults.length === 0) return;
+
+    switch (e.key) {
+      case 'ArrowDown':
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev < searchResults.length - 1 ? prev + 1 : prev));
+        break;
+      case 'ArrowUp':
+        e.preventDefault();
+        setSelectedIndex((prev) => (prev > 0 ? prev - 1 : -1));
+        break;
+      case 'Enter':
+        e.preventDefault();
+        if (selectedIndex >= 0 && selectedIndex < searchResults.length) {
+          const country = searchResults[selectedIndex];
+          setShowSearchResults(false);
+          focusOnCountry(country.iso3);
+        } else if (searchResults.length > 0) {
+          // If nothing selected, select the first one
+          const country = searchResults[0];
+          setShowSearchResults(false);
+          focusOnCountry(country.iso3);
+        }
+        break;
+      case 'Escape':
+    e.preventDefault();
+        setShowSearchResults(false);
+        setSelectedIndex(-1);
+        break;
+    }
+  }, [showSearchResults, searchResults, selectedIndex, focusOnCountry]);
 
   // Handle mouse enter on country
   const handleMouseEnter = useCallback((geo: any, event: React.MouseEvent) => {
@@ -509,7 +593,7 @@ const LanguageMap: React.FC = () => {
   const getFillColor = useCallback((geo: any) => {
     const iso3 = getIso3(geo);
     const countryInfo = COUNTRY_LANGUAGES[iso3];
-    
+
     if (selectedLanguage) {
       if (highlightedCountries.has(iso3)) {
         const langInfo = MAJOR_LANGUAGES.find(l => l.id === selectedLanguage);
@@ -628,26 +712,39 @@ const LanguageMap: React.FC = () => {
             <div className="relative flex-1 max-w-md">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
               <input
+                ref={searchInputRef}
                 type="text"
                 placeholder="搜索国家名称... Search country..."
                 value={searchTerm}
                 onChange={(e) => handleSearch(e.target.value)}
+                onKeyDown={handleSearchKeyDown}
                 onFocus={() => searchResults.length > 0 && setShowSearchResults(true)}
                 className="w-full pl-10 pr-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
               />
               {/* Search Results Dropdown */}
               {showSearchResults && searchResults.length > 0 && (
-                <div className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto">
-                  {searchResults.map((country) => {
+                <div 
+                  ref={searchResultsRef}
+                  className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto"
+                >
+                  {searchResults.map((country, index) => {
                     const info = getCountryInfo(country.iso3);
+                    const isSelected = index === selectedIndex;
                     return (
                       <div
                         key={country.iso3}
-                        className="px-4 py-3 hover:bg-slate-700 cursor-pointer border-b border-slate-700 last:border-b-0"
+                        className={`px-4 py-3 cursor-pointer border-b border-slate-700 last:border-b-0 transition-colors ${
+                          isSelected 
+                            ? 'bg-blue-600 text-white' 
+                            : 'hover:bg-slate-700'
+                        }`}
                         onClick={() => {
                           setShowSearchResults(false);
-                          setSearchTerm('');
+                          setSelectedIndex(-1);
+                          // Focus on the selected country (keep search term)
+                          focusOnCountry(country.iso3);
                         }}
+                        onMouseEnter={() => setSelectedIndex(index)}
                       >
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">{country.flag}</span>
@@ -689,23 +786,23 @@ const LanguageMap: React.FC = () => {
             >
               全部 All
             </button>
-            {MAJOR_LANGUAGES.map((lang) => (
-              <button
-                key={lang.id}
+          {MAJOR_LANGUAGES.map((lang) => (
+            <button
+              key={lang.id}
                 onClick={() => setSelectedLanguage(lang.id === selectedLanguage ? null : lang.id)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${
-                  selectedLanguage === lang.id
+                selectedLanguage === lang.id
                     ? 'text-white shadow-lg'
                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                }`}
+              }`}
                 style={{
                   backgroundColor: selectedLanguage === lang.id ? lang.color : undefined,
                 }}
-              >
-                {lang.name}
+            >
+              {lang.name}
                 <span className="text-xs opacity-70">{lang.nameEn}</span>
-              </button>
-            ))}
+            </button>
+          ))}
           </div>
           
           {selectedLanguage && (
@@ -722,7 +819,7 @@ const LanguageMap: React.FC = () => {
 
       {/* Map Container */}
       <div 
-        className="relative"
+        className="relative" 
         style={{ height: 'calc(100vh - 180px)' }}
         onMouseMove={handleMouseMove}
       >
@@ -743,41 +840,47 @@ const LanguageMap: React.FC = () => {
             maxZoom={8}
           >
             <Geographies geography={geoUrl}>
-              {({ geographies }) => (
+              {({ geographies }) => {
+                // Store geographies in ref for search functionality
+                if (geographies.length > 0) {
+                  geographiesRef.current = geographies;
+                }
+                
+                return (
                 <>
                   {geographies.map((geo) => {
                     const iso3 = getIso3(geo);
                     const isHighlighted = highlightedCountries.has(iso3);
-                    return (
-                      <Geography
-                        key={geo.rsmKey}
-                        geography={geo}
+                  return (
+                    <Geography
+                      key={geo.rsmKey}
+                      geography={geo}
                         onMouseEnter={(event) => handleMouseEnter(geo, event)}
                         onMouseLeave={handleMouseLeave}
-                        style={{
-                          default: {
+                      style={{
+                        default: {
                             fill: getFillColor(geo),
                             stroke: '#334155',
-                            strokeWidth: 0.5,
-                            outline: 'none',
+                          strokeWidth: 0.5,
+                          outline: 'none',
                             transition: 'fill 0.2s',
-                          },
-                          hover: {
+                        },
+                        hover: {
                             fill: selectedLanguage && !isHighlighted
                               ? '#94A3B8'
                               : '#60A5FA',
                             stroke: '#1E293B',
-                            strokeWidth: 1,
-                            outline: 'none',
-                            cursor: 'pointer',
-                          },
-                          pressed: {
+                          strokeWidth: 1,
+                          outline: 'none',
+                          cursor: 'pointer',
+                        },
+                        pressed: {
                             fill: '#2563EB',
-                            outline: 'none',
-                          },
-                        }}
-                      />
-                    );
+                          outline: 'none',
+                        },
+                      }}
+                    />
+                  );
                   })}
                   {/* Country Labels */}
                   {showLabels && geographies.map((geo) => {
@@ -823,7 +926,8 @@ const LanguageMap: React.FC = () => {
                     );
                   })}
                 </>
-              )}
+                );
+              }}
             </Geographies>
             
             {/* Small Country Markers */}
@@ -994,13 +1098,13 @@ const LanguageMap: React.FC = () => {
             {/* Language Info */}
             <div className="space-y-1.5 text-sm border-b border-slate-600 pb-3 mb-3">
               <div className="flex justify-between gap-6">
-                <span className="text-slate-400">母语:</span>
+                    <span className="text-slate-400">母语:</span>
                 <span className="text-white font-medium">{tooltip.primaryLanguage}</span>
-              </div>
+                  </div>
               
               {tooltip.secondaryLanguages.length > 0 && (
                 <div className="flex justify-between gap-6">
-                  <span className="text-slate-400">第二语言:</span>
+                    <span className="text-slate-400">第二语言:</span>
                   <span className="text-white font-medium">{tooltip.secondaryLanguages.join(', ')}</span>
                 </div>
               )}
@@ -1055,8 +1159,8 @@ const LanguageMap: React.FC = () => {
                 </span>
                 <span className="text-white">
                   {MESSENGER_INFO[tooltip.preferredMessenger]?.icon} {MESSENGER_INFO[tooltip.preferredMessenger]?.name}
-                </span>
-              </div>
+                    </span>
+                  </div>
               
               <div className="flex justify-between gap-6">
                 <span className="text-slate-400">WhatsApp普及:</span>
@@ -1066,8 +1170,8 @@ const LanguageMap: React.FC = () => {
                   'text-red-400'
                 }`}>
                   {getWhatsappPopularityLabel(tooltip.whatsappPopularity).text}
-                </span>
-              </div>
+                    </span>
+                  </div>
               
               {tooltip.businessNote && (
                 <div className="mt-2 p-2 bg-slate-700/50 rounded text-xs text-slate-300 italic">
@@ -1105,9 +1209,9 @@ const LanguageMap: React.FC = () => {
                   <div className="flex justify-between gap-6">
                     <span className="text-slate-400">时区:</span>
                     <span className="text-slate-300 font-mono">{tooltip.utcOffset}</span>
-                  </div>
-                )}
-                
+          </div>
+        )}
+
                 <div className="mt-2 p-2 bg-amber-900/30 rounded">
                   <div className="text-xs text-amber-300 mb-1">🇨🇳 最佳联系时间 (北京时间)</div>
                   <div className="flex justify-between text-xs">
@@ -1119,11 +1223,11 @@ const LanguageMap: React.FC = () => {
                       <Moon className="w-3 h-3 inline mr-1 text-blue-400" />
                       午后: <span className="text-white font-bold">{tooltip.afternoonBj}</span>
                     </span>
-                  </div>
-                </div>
-              </div>
-            )}
+            </div>
           </div>
+        </div>
+            )}
+        </div>
         )}
       </div>
     </div>
