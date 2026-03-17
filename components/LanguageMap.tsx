@@ -12,6 +12,7 @@ import { geoCentroid } from 'd3-geo';
 import { ArrowLeft, Globe, Info, Tag, MessageCircle, Map, Mail, Download, Search, Clock, Sun, Moon } from 'lucide-react';
 import { MAJOR_LANGUAGES, COUNTRY_LANGUAGES, getEnglishProficiencyLabel, getCountryInfo, getWhatsappPopularityLabel, MESSENGER_INFO, CountryLanguageInfo } from '../languageData';
 import CountryDetailPanel from './CountryDetailPanel';
+import { useTheme } from '../ThemeContext';
 
 // Timezone data for countries (UTC offset in hours)
 const COUNTRY_TIMEZONES: Record<string, { offset: number; timezone: string }> = {
@@ -194,6 +195,7 @@ interface TooltipContent {
 
 const LanguageMap: React.FC = () => {
   const navigate = useNavigate();
+  const { isDark } = useTheme();
   const [selectedLanguage, setSelectedLanguage] = useState<string | null>(null);
   const [tooltip, setTooltip] = useState<TooltipContent | null>(null);
   const [position, setPosition] = useState({ coordinates: [150, 0] as [number, number], zoom: 1 });
@@ -616,22 +618,28 @@ const LanguageMap: React.FC = () => {
   }, [selectedLanguage, highlightedCountries, getIso3, getPrimaryLanguageColor]);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900">
+    <div className={`min-h-screen transition-colors duration-300 ${isDark
+      ? 'bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900'
+      : 'bg-gradient-to-br from-slate-100 via-white to-slate-100'
+      }`}>
       {/* Header */}
-      <div className="bg-slate-800/50 backdrop-blur border-b border-slate-700">
+      <div className={`backdrop-blur border-b ${isDark ? 'bg-slate-800/50 border-slate-700' : 'bg-white/80 border-slate-200'}`}>
         <div className="max-w-[95vw] mx-auto px-4 py-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-4">
               <button
                 onClick={() => navigate('/')}
-                className="flex items-center gap-2 px-4 py-2 bg-slate-700 hover:bg-slate-600 text-white rounded-lg transition-colors"
+                className={`flex items-center gap-2 px-4 py-2 rounded-lg transition-colors ${isDark
+                  ? 'bg-slate-700 hover:bg-slate-600 text-white'
+                  : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                  }`}
               >
                 <ArrowLeft className="w-4 h-4" />
                 返回
               </button>
               <div className="flex items-center gap-2">
                 <Globe className="w-6 h-6 text-blue-400" />
-                <h1 className="text-xl font-bold text-white">世界语言地图 Language Map</h1>
+                <h1 className={`text-xl font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>世界地图 Language Map</h1>
               </div>
             </div>
 
@@ -641,7 +649,7 @@ const LanguageMap: React.FC = () => {
                 onClick={() => setShowLabels(!showLabels)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${showLabels
                   ? 'bg-blue-600 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
               >
                 <Tag className="w-4 h-4" />
@@ -653,7 +661,7 @@ const LanguageMap: React.FC = () => {
                 onClick={() => setShowTimezones(!showTimezones)}
                 className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm transition-colors ${showTimezones
                   ? 'bg-amber-600 text-white'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
               >
                 <Clock className="w-4 h-4" />
@@ -661,9 +669,9 @@ const LanguageMap: React.FC = () => {
               </button>
 
               {/* Beijing Time Display */}
-              <div className="hidden md:flex items-center gap-2 px-3 py-1.5 bg-red-900/50 rounded-lg text-sm">
+              <div className={`hidden md:flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm ${isDark ? 'bg-red-900/50' : 'bg-red-50 border border-red-200'}`}>
                 <span className="text-red-400">🇨🇳 北京</span>
-                <span className="text-white font-mono font-bold">
+                <span className={`font-mono font-bold ${isDark ? 'text-white' : 'text-slate-800'}`}>
                   {currentTime.toLocaleTimeString('zh-CN', {
                     hour: '2-digit',
                     minute: '2-digit',
@@ -676,7 +684,7 @@ const LanguageMap: React.FC = () => {
               {/* Legend - Primary Language Colors - Expanded */}
               {!selectedLanguage && (
                 <div className="hidden lg:flex items-center gap-2 text-xs flex-wrap">
-                  <span className="text-slate-400">母语:</span>
+                  <span className={isDark ? 'text-slate-400' : 'text-slate-500'}>母语:</span>
                   {[
                     { name: '英语', color: '#3B82F6' },
                     { name: '中文', color: '#EF4444' },
@@ -694,7 +702,7 @@ const LanguageMap: React.FC = () => {
                         className="w-2.5 h-2.5 rounded"
                         style={{ backgroundColor: lang.color }}
                       ></span>
-                      <span className="text-slate-300">{lang.name}</span>
+                      <span className={isDark ? 'text-slate-300' : 'text-slate-600'}>{lang.name}</span>
                     </div>
                   ))}
                 </div>
@@ -705,7 +713,7 @@ const LanguageMap: React.FC = () => {
       </div>
 
       {/* Search and Filter Bar */}
-      <div className="bg-slate-800/30 border-b border-slate-700">
+      <div className={`border-b ${isDark ? 'bg-slate-800/30 border-slate-700' : 'bg-white/60 border-slate-200'}`}>
         <div className="max-w-[95vw] mx-auto px-4 py-3">
           {/* Search Box and Export */}
           <div className="flex items-center gap-3 mb-3">
@@ -719,13 +727,19 @@ const LanguageMap: React.FC = () => {
                 onChange={(e) => handleSearch(e.target.value)}
                 onKeyDown={handleSearchKeyDown}
                 onFocus={() => searchResults.length > 0 && setShowSearchResults(true)}
-                className="w-full pl-10 pr-4 py-2 bg-slate-700 border border-slate-600 rounded-lg text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                className={`w-full pl-10 pr-4 py-2 border rounded-lg placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm ${isDark
+                  ? 'bg-slate-700 border-slate-600 text-white'
+                  : 'bg-white border-slate-200 text-slate-700'
+                  }`}
               />
               {/* Search Results Dropdown */}
               {showSearchResults && searchResults.length > 0 && (
                 <div
                   ref={searchResultsRef}
-                  className="absolute top-full left-0 right-0 mt-1 bg-slate-800 border border-slate-600 rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto"
+                  className={`absolute top-full left-0 right-0 mt-1 border rounded-lg shadow-xl z-50 max-h-80 overflow-y-auto ${isDark
+                    ? 'bg-slate-800 border-slate-600'
+                    : 'bg-white border-slate-200'
+                    }`}
                 >
                   {searchResults.map((country, index) => {
                     const info = getCountryInfo(country.iso3);
@@ -733,9 +747,9 @@ const LanguageMap: React.FC = () => {
                     return (
                       <div
                         key={country.iso3}
-                        className={`px-4 py-3 cursor-pointer border-b border-slate-700 last:border-b-0 transition-colors ${isSelected
+                        className={`px-4 py-3 cursor-pointer border-b last:border-b-0 transition-colors ${isDark ? 'border-slate-700' : 'border-slate-100'} ${isSelected
                           ? 'bg-blue-600 text-white'
-                          : 'hover:bg-slate-700'
+                          : isDark ? 'hover:bg-slate-700' : 'hover:bg-slate-50'
                           }`}
                         onClick={() => {
                           setShowSearchResults(false);
@@ -748,12 +762,12 @@ const LanguageMap: React.FC = () => {
                         <div className="flex items-center gap-3">
                           <span className="text-2xl">{country.flag}</span>
                           <div className="flex-1">
-                            <div className="font-medium text-white">{country.name}</div>
-                            <div className="text-xs text-slate-400">{country.nameEn}</div>
+                            <div className={`font-medium ${isDark ? 'text-white' : 'text-slate-800'}`}>{country.name}</div>
+                            <div className={`text-xs ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>{country.nameEn}</div>
                           </div>
                           <div className="text-right text-xs">
                             <div className="text-green-400">📧 {info?.businessLang}</div>
-                            <div className="text-slate-400">🗺️ {info?.googleMapsLang}</div>
+                            <div className={isDark ? 'text-slate-400' : 'text-slate-500'}>🗺️ {info?.googleMapsLang}</div>
                           </div>
                         </div>
                       </div>
@@ -778,8 +792,8 @@ const LanguageMap: React.FC = () => {
             <button
               onClick={() => setSelectedLanguage(null)}
               className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap ${selectedLanguage === null
-                ? 'bg-white text-slate-900 shadow-lg'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                ? isDark ? 'bg-white text-slate-900 shadow-lg' : 'bg-slate-800 text-white shadow-lg'
+                : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                 }`}
             >
               全部 All
@@ -790,7 +804,7 @@ const LanguageMap: React.FC = () => {
                 onClick={() => setSelectedLanguage(lang.id === selectedLanguage ? null : lang.id)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-all whitespace-nowrap flex items-center gap-2 ${selectedLanguage === lang.id
                   ? 'text-white shadow-lg'
-                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                  : isDark ? 'bg-slate-700 text-slate-300 hover:bg-slate-600' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
                   }`}
                 style={{
                   backgroundColor: selectedLanguage === lang.id ? lang.color : undefined,
@@ -803,9 +817,9 @@ const LanguageMap: React.FC = () => {
           </div>
 
           {selectedLanguage && (
-            <div className="mt-2 text-sm text-slate-400">
+            <div className={`mt-2 text-sm ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
               高亮显示: 使用
-              <span className="text-white font-medium mx-1">
+              <span className={`font-medium mx-1 ${isDark ? 'text-white' : 'text-slate-800'}`}>
                 {MAJOR_LANGUAGES.find(l => l.id === selectedLanguage)?.name}
               </span>
               的国家 ({highlightedCountries.size} 个)
@@ -834,7 +848,7 @@ const LanguageMap: React.FC = () => {
             center={position.coordinates}
             onMoveEnd={handleMoveEnd}
             minZoom={0.5}
-            maxZoom={12}
+            maxZoom={15}
           >
             <Geographies geography={geoUrl}>
               {({ geographies }) => {
@@ -862,7 +876,7 @@ const LanguageMap: React.FC = () => {
                           style={{
                             default: {
                               fill: selectedCountryIso3 === iso3 ? '#3B82F6' : getFillColor(geo),
-                              stroke: selectedCountryIso3 === iso3 ? '#60A5FA' : '#334155',
+                              stroke: selectedCountryIso3 === iso3 ? '#60A5FA' : (isDark ? '#334155' : '#94a3b8'),
                               strokeWidth: selectedCountryIso3 === iso3 ? 1.5 : 0.5,
                               outline: 'none',
                               transition: 'fill 0.2s',
@@ -871,7 +885,7 @@ const LanguageMap: React.FC = () => {
                               fill: selectedLanguage && !isHighlighted
                                 ? '#94A3B8'
                                 : '#60A5FA',
-                              stroke: '#1E293B',
+                              stroke: isDark ? '#1E293B' : '#475569',
                               strokeWidth: 1,
                               outline: 'none',
                               cursor: 'pointer',

@@ -2,6 +2,7 @@ import React, { useMemo, useState } from 'react';
 import { COUNTRIES, BEIJING_TZ } from '../constants';
 import { ComputedCountryData, CountryData } from '../types';
 import { AlertCircle, Clock, Search, Filter, Sun, Sunset, Palmtree, Coffee } from 'lucide-react';
+import { useTheme } from '../ThemeContext';
 
 interface WorldTableProps {
   currentTime: Date;
@@ -151,6 +152,7 @@ const checkHoliday = (date: Date, countryId: string): string | null => {
 };
 
 const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest, onCountryClick }) => {
+  const { isDark } = useTheme();
   const [filterRegion, setFilterRegion] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -328,19 +330,25 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
   const regions = ['All', ...Array.from(new Set(COUNTRIES.map(c => c.region)))];
 
   return (
-    <div className="bg-slate-800/90 rounded-2xl shadow-xl shadow-black/30 overflow-hidden border border-slate-700/50 backdrop-blur-sm">
+    <div className={`rounded-2xl shadow-xl overflow-hidden backdrop-blur-sm transition-colors duration-300 ${isDark
+      ? 'bg-slate-800/90 shadow-black/30 border border-slate-700/50'
+      : 'bg-white/95 shadow-slate-200/50 border border-slate-200'
+      }`}>
       {/* Controls Header - Stacked Layout */}
-      <div className="flex flex-col p-5 border-b border-slate-700/50 bg-slate-900/50 gap-4">
+      <div className={`flex flex-col p-5 border-b gap-4 ${isDark ? 'border-slate-700/50 bg-slate-900/50' : 'border-slate-100 bg-slate-50/80'}`}>
 
         {/* Row 1: Search Box */}
         <div className="w-full">
           <div className="relative group">
             <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-              <Search className="h-5 w-5 text-slate-500 group-focus-within:text-blue-400 transition-colors" />
+              <Search className={`h-5 w-5 group-focus-within:text-blue-400 transition-colors ${isDark ? 'text-slate-500' : 'text-slate-400'}`} />
             </div>
             <input
               type="text"
-              className="block w-full pl-11 pr-4 py-3 border border-slate-600/50 rounded-xl leading-5 bg-slate-800 placeholder-slate-500 focus:outline-none focus:bg-slate-800 focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm text-slate-200"
+              className={`block w-full pl-11 pr-4 py-3 border rounded-xl leading-5 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all shadow-sm ${isDark
+                ? 'border-slate-600/50 bg-slate-800 text-slate-200'
+                : 'border-slate-200 bg-white text-slate-700'
+                }`}
               placeholder="搜索国家、地区或区号 (Search Country, Region or Code)..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
@@ -350,7 +358,10 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
 
         {/* Row 2: Region Filters */}
         <div className="flex items-center gap-3 overflow-x-auto pb-1 scrollbar-hide w-full">
-          <div className="flex items-center text-slate-500 text-xs font-semibold uppercase tracking-wider shrink-0 gap-1 bg-slate-800 px-2 py-1 rounded border border-slate-600/50">
+          <div className={`flex items-center text-xs font-semibold uppercase tracking-wider shrink-0 gap-1 px-2 py-1 rounded border ${isDark
+            ? 'text-slate-500 bg-slate-800 border-slate-600/50'
+            : 'text-slate-400 bg-white border-slate-200'
+            }`}>
             <Filter className="w-3 h-3" />
             Region
           </div>
@@ -360,7 +371,9 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
               onClick={() => setFilterRegion(r)}
               className={`px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap border ${filterRegion === r
                 ? 'bg-blue-600 text-white shadow-md shadow-blue-500/20 border-blue-500'
-                : 'bg-slate-800 text-slate-400 hover:bg-slate-700 border-slate-600/50 hover:border-slate-500 hover:text-slate-300'
+                : isDark
+                  ? 'bg-slate-800 text-slate-400 hover:bg-slate-700 border-slate-600/50 hover:border-slate-500 hover:text-slate-300'
+                  : 'bg-white text-slate-500 hover:bg-slate-50 border-slate-200 hover:border-slate-300 hover:text-slate-700'
                 }`}
             >
               {r}
@@ -372,49 +385,52 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
       <div className="overflow-x-auto">
         <table className="w-full text-left border-collapse" style={{ tableLayout: 'auto' }}>
           <thead>
-            <tr className="bg-slate-900/60 text-slate-400 text-xs uppercase tracking-wider border-b border-slate-700/50">
+            <tr className={`text-xs uppercase tracking-wider ${isDark
+              ? 'bg-slate-900/60 text-slate-400 border-b border-slate-700/50'
+              : 'bg-slate-50 text-slate-500 border-b border-slate-200'
+              }`}>
               <th className="p-4 font-semibold min-w-[220px]">
                 国家 / 地区
-                <div className="text-[10px] text-slate-500 font-normal normal-case">Country / Region</div>
+                <div className={`text-[10px] font-normal normal-case ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Country / Region</div>
               </th>
               <th className="p-4 font-semibold">
                 当地时间
-                <div className="text-[10px] text-slate-500 font-normal normal-case">Local Time</div>
+                <div className={`text-[10px] font-normal normal-case ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Local Time</div>
               </th>
               <th className="p-4 font-semibold text-center min-w-[140px] whitespace-nowrap">
                 上班时间(北京)
-                <div className="text-[10px] text-slate-500 font-normal normal-case">Work Hours (BJ)</div>
+                <div className={`text-[10px] font-normal normal-case ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Work Hours (BJ)</div>
               </th>
-              <th className="p-4 font-semibold hidden md:table-cell text-slate-400">
+              <th className={`p-4 font-semibold hidden md:table-cell ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                 当地最佳发信时段
-                <div className="text-[10px] text-slate-500 font-normal normal-case">Local Best Window</div>
+                <div className={`text-[10px] font-normal normal-case ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Local Best Window</div>
               </th>
 
-              <th className="p-4 font-semibold bg-indigo-500/10 border-b-2 border-indigo-400 text-indigo-300 text-center hidden md:table-cell">
+              <th className={`p-4 font-semibold border-b-2 border-indigo-400 text-center hidden md:table-cell ${isDark ? 'bg-indigo-500/10 text-indigo-300' : 'bg-indigo-50 text-indigo-600'}`}>
                 最佳发信时段(北京)
-                <div className="text-[10px] text-indigo-400 font-normal normal-case">Best Window (BJ)</div>
+                <div className={`text-[10px] font-normal normal-case ${isDark ? 'text-indigo-400' : 'text-indigo-500'}`}>Best Window (BJ)</div>
               </th>
-              <th className="p-4 font-semibold bg-amber-500/10 border-b-2 border-amber-400 text-amber-300 text-center">
+              <th className={`p-4 font-semibold border-b-2 border-amber-400 text-center ${isDark ? 'bg-amber-500/10 text-amber-300' : 'bg-amber-50 text-amber-600'}`}>
                 早安发信点 (BJ)
-                <div className="text-[10px] text-amber-400 font-normal normal-case">Morning Prime</div>
+                <div className={`text-[10px] font-normal normal-case ${isDark ? 'text-amber-400' : 'text-amber-500'}`}>Morning Prime</div>
               </th>
-              <th className="p-4 font-semibold bg-blue-500/10 border-b-2 border-blue-400 text-blue-300 text-center">
+              <th className={`p-4 font-semibold border-b-2 border-blue-400 text-center ${isDark ? 'bg-blue-500/10 text-blue-300' : 'bg-blue-50 text-blue-600'}`}>
                 午安发信点 (BJ)
-                <div className="text-[10px] text-blue-400 font-normal normal-case">Afternoon Prime</div>
+                <div className={`text-[10px] font-normal normal-case ${isDark ? 'text-blue-400' : 'text-blue-500'}`}>Afternoon Prime</div>
               </th>
               <th className="p-4 font-semibold">
                 状态
-                <div className="text-[10px] text-slate-500 font-normal normal-case">Status</div>
+                <div className={`text-[10px] font-normal normal-case ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>Status</div>
               </th>
             </tr>
           </thead>
-          <tbody className="divide-y divide-slate-700/40">
+          <tbody className={`divide-y ${isDark ? 'divide-slate-700/40' : 'divide-slate-100'}`}>
             {sortedData.map((item) => (
               <tr
                 key={item.id}
-                className={`group transition-colors hover:bg-slate-700/40 country-row cursor-pointer ${item.isHoliday ? 'bg-red-900/15' :
-                  item.isWeekend ? 'bg-slate-700/20' :
-                    item.isCurrentlyGood ? 'bg-green-900/15' : ''
+                className={`group transition-colors country-row cursor-pointer ${isDark
+                  ? `hover:bg-slate-700/40 ${item.isHoliday ? 'bg-red-900/15' : item.isWeekend ? 'bg-slate-700/20' : item.isCurrentlyGood ? 'bg-green-900/15' : ''}`
+                  : `hover:bg-slate-50 ${item.isHoliday ? 'bg-red-50/50' : item.isWeekend ? 'bg-slate-50/50' : item.isCurrentlyGood ? 'bg-green-50/50' : ''}`
                   }`}
                 data-country-name={item.name.includes('(') ? item.name.split('(')[0].trim() : item.name.split(' ')[0]}
                 data-country-flag={item.flag}
@@ -427,12 +443,15 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
                   <div className="flex items-center gap-3">
                     <span className="text-3xl" role="img" aria-label={item.name}>{item.flag}</span>
                     <div>
-                      <div className="font-semibold text-slate-200 text-sm">{item.name}</div>
+                      <div className={`font-semibold text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{item.name}</div>
                       <div className="flex items-center gap-2 mt-0.5">
-                        <span className="text-xs font-mono bg-slate-700/50 text-slate-400 px-1.5 py-0.5 rounded border border-slate-600/50">
+                        <span className={`text-xs font-mono px-1.5 py-0.5 rounded border ${isDark
+                          ? 'bg-slate-700/50 text-slate-400 border-slate-600/50'
+                          : 'bg-slate-100 text-slate-500 border-slate-200'
+                          }`}>
                           {item.callingCode}
                         </span>
-                        <span className="text-xs text-slate-500 font-mono">
+                        <span className={`text-xs font-mono ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
                           {item.timeDifferenceLabel}
                         </span>
                       </div>
@@ -440,37 +459,42 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
                   </div>
                 </td>
 
-                <td className="p-4 font-mono text-slate-200 font-medium text-base relative z-10">
+                <td className={`p-4 font-mono font-medium text-base relative z-10 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
                   {item.currentLocalTimeStr}
                 </td>
 
-                <td className="p-4 text-center font-mono text-slate-300 font-medium text-sm whitespace-nowrap relative z-10">
+                <td className={`p-4 text-center font-mono font-medium text-sm whitespace-nowrap relative z-10 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
                   {item.workHoursBeijing}
                 </td>
 
-                <td className="p-4 hidden md:table-cell text-sm text-slate-400 relative z-10">
+                <td className={`p-4 hidden md:table-cell text-sm relative z-10 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
                   {item.nextGoodSlotLocal}
                 </td>
 
-                <td className="p-4 bg-indigo-500/5 group-hover:bg-indigo-500/10 transition-colors text-center border-l border-indigo-500/10 text-indigo-300 font-medium text-sm hidden md:table-cell relative z-10">
+                <td className={`p-4 transition-colors text-center font-medium text-sm hidden md:table-cell relative z-10 ${isDark
+                  ? 'bg-indigo-500/5 group-hover:bg-indigo-500/10 border-l border-indigo-500/10 text-indigo-300'
+                  : 'bg-indigo-50/50 group-hover:bg-indigo-50 border-l border-indigo-100 text-indigo-600'
+                  }`}>
                   {item.nextGoodSlotBeijing}
                 </td>
 
-                {/* Morning Prime - Changed from button to div */}
-                <td className="p-4 bg-amber-500/5 group-hover:bg-amber-500/10 transition-colors text-center border-l border-amber-500/10 relative z-10">
-                  <div
-                    className="flex items-center justify-center gap-2 mx-auto font-bold text-lg text-amber-400"
-                  >
+                {/* Morning Prime */}
+                <td className={`p-4 transition-colors text-center relative z-10 ${isDark
+                  ? 'bg-amber-500/5 group-hover:bg-amber-500/10 border-l border-amber-500/10'
+                  : 'bg-amber-50/50 group-hover:bg-amber-50 border-l border-amber-100'
+                  }`}>
+                  <div className={`flex items-center justify-center gap-2 mx-auto font-bold text-lg ${isDark ? 'text-amber-400' : 'text-amber-600'}`}>
                     <Sun className="w-4 h-4" />
                     {item.primeMorningBj}
                   </div>
                 </td>
 
-                {/* Afternoon Prime - Changed from button to div */}
-                <td className="p-4 bg-blue-500/5 group-hover:bg-blue-500/10 transition-colors text-center border-l border-blue-500/10 relative z-10">
-                  <div
-                    className="flex items-center justify-center gap-2 mx-auto font-bold text-lg text-blue-400"
-                  >
+                {/* Afternoon Prime */}
+                <td className={`p-4 transition-colors text-center relative z-10 ${isDark
+                  ? 'bg-blue-500/5 group-hover:bg-blue-500/10 border-l border-blue-500/10'
+                  : 'bg-blue-50/50 group-hover:bg-blue-50 border-l border-blue-100'
+                  }`}>
+                  <div className={`flex items-center justify-center gap-2 mx-auto font-bold text-lg ${isDark ? 'text-blue-400' : 'text-blue-600'}`}>
                     <Sunset className="w-4 h-4" />
                     {item.primeAfternoonBj}
                   </div>
@@ -478,17 +502,26 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
 
                 <td className="p-4 relative z-10">
                   {item.isHoliday ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-red-500/15 text-red-400 border border-red-500/30 whitespace-nowrap" title={`Public Holiday: ${item.holidayName}`}>
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${isDark
+                      ? 'bg-red-500/15 text-red-400 border border-red-500/30'
+                      : 'bg-red-50 text-red-500 border border-red-200'
+                      }`} title={`Public Holiday: ${item.holidayName}`}>
                       <Palmtree className="w-3 h-3" />
                       Holiday
                     </span>
                   ) : item.isWeekend ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-600/30 text-slate-400 border border-slate-500/30 whitespace-nowrap">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${isDark
+                      ? 'bg-slate-600/30 text-slate-400 border border-slate-500/30'
+                      : 'bg-slate-100 text-slate-500 border border-slate-200'
+                      }`}>
                       <Coffee className="w-3 h-3" />
                       Weekend
                     </span>
                   ) : item.isCurrentlyGood ? (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-green-500/15 text-green-400 border border-green-500/30 whitespace-nowrap shadow-sm shadow-green-500/10">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap shadow-sm ${isDark
+                      ? 'bg-green-500/15 text-green-400 border border-green-500/30 shadow-green-500/10'
+                      : 'bg-green-50 text-green-600 border border-green-200 shadow-green-200/30'
+                      }`}>
                       <span className="relative flex h-2 w-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
@@ -496,7 +529,10 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
                       Active
                     </span>
                   ) : (
-                    <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-700/30 text-slate-500 border border-slate-600/30 whitespace-nowrap">
+                    <span className={`inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-semibold whitespace-nowrap ${isDark
+                      ? 'bg-slate-700/30 text-slate-500 border border-slate-600/30'
+                      : 'bg-slate-50 text-slate-400 border border-slate-200'
+                      }`}>
                       <Clock className="w-3 h-3" />
                       Wait
                     </span>
@@ -510,7 +546,7 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
       </div>
 
       {sortedData.length === 0 && (
-        <div className="p-12 text-center text-slate-400 flex flex-col items-center">
+        <div className={`p-12 text-center flex flex-col items-center ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
           <AlertCircle className="w-12 h-12 mb-2 opacity-50" />
           <p>未找到匹配的国家 (No countries found).</p>
         </div>

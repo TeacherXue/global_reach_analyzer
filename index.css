@@ -2,29 +2,80 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Noto+Sans+SC:wght@300;400;500;700&display=swap');
 
-body {
-  font-family: 'Inter', 'Noto Sans SC', sans-serif;
-  background-color: #0F172A;
-  color: #E2E8F0;
+/* ===== Theme CSS Variables ===== */
+:root,
+[data-theme="dark"] {
+  --bg-page: #0F172A;
+  --bg-card: rgba(30, 41, 59, 0.9);
+  --bg-card-solid: #1e293b;
+  --bg-header: rgba(30, 41, 59, 0.5);
+  --bg-input: #1e293b;
+  --bg-hover: rgba(51, 65, 85, 0.4);
+  --bg-badge: rgba(51, 65, 85, 0.3);
+  --text-primary: #f8fafc;
+  --text-secondary: #cbd5e1;
+  --text-muted: #94a3b8;
+  --text-dim: #64748b;
+  --border-color: rgba(51, 65, 85, 0.5);
+  --border-strong: #334155;
+  --shadow-color: rgba(0, 0, 0, 0.3);
+  --scrollbar-track: #1E293B;
+  --scrollbar-thumb: #475569;
+  --scrollbar-hover: #64748B;
+  --row-watermark: 0.04;
+  --row-watermark-hover: 0.07;
+  --row-watermark-color: #CBD5E1;
+  color-scheme: dark;
 }
 
-/* Custom scrollbar for dark theme */
+[data-theme="light"] {
+  --bg-page: #f1f5f9;
+  --bg-card: rgba(255, 255, 255, 0.95);
+  --bg-card-solid: #ffffff;
+  --bg-header: rgba(255, 255, 255, 0.85);
+  --bg-input: #f8fafc;
+  --bg-hover: rgba(241, 245, 249, 0.7);
+  --bg-badge: rgba(241, 245, 249, 0.8);
+  --text-primary: #0f172a;
+  --text-secondary: #334155;
+  --text-muted: #64748b;
+  --text-dim: #94a3b8;
+  --border-color: #e2e8f0;
+  --border-strong: #cbd5e1;
+  --shadow-color: rgba(0, 0, 0, 0.08);
+  --scrollbar-track: #f1f5f9;
+  --scrollbar-thumb: #cbd5e1;
+  --scrollbar-hover: #94a3b8;
+  --row-watermark: 0.03;
+  --row-watermark-hover: 0.06;
+  --row-watermark-color: #334155;
+  color-scheme: light;
+}
+
+body {
+  font-family: 'Inter', 'Noto Sans SC', sans-serif;
+  background-color: var(--bg-page);
+  color: var(--text-secondary);
+  transition: background-color 0.3s ease, color 0.3s ease;
+}
+
+/* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
   height: 8px;
 }
 
 ::-webkit-scrollbar-track {
-  background: #1E293B;
+  background: var(--scrollbar-track);
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #475569;
+  background: var(--scrollbar-thumb);
   border-radius: 4px;
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: #64748B;
+  background: var(--scrollbar-hover);
 }
 
 /* Country name background for table rows */
@@ -45,8 +96,8 @@ body {
   justify-content: center;
   font-size: 4.5rem;
   font-weight: bold;
-  color: #CBD5E1;
-  opacity: 0.04;
+  color: var(--row-watermark-color);
+  opacity: var(--row-watermark);
   pointer-events: none;
   z-index: 0;
   white-space: nowrap;
@@ -57,7 +108,7 @@ body {
 }
 
 .country-row:hover::after {
-  opacity: 0.07;
+  opacity: var(--row-watermark-hover);
 }
 
 /* Ensure all td elements are above the background */
@@ -68,13 +119,30 @@ body {
 
 /* Smooth transitions for interactive elements */
 * {
-  transition-property: background-color, border-color, box-shadow;
+  transition-property: background-color, border-color, box-shadow, color;
   transition-duration: 0.15s;
   transition-timing-function: ease;
 }
 
 /* Override transition for elements that shouldn't have it */
-input, textarea, button, a, .no-transition {
+input,
+textarea,
+button,
+a,
+.no-transition {
   transition-property: all;
   transition-duration: 0.2s;
+}
+
+/* ===== Theme-aware utility overrides ===== */
+
+/* Light theme overrides for common dark-mode patterns */
+[data-theme="light"] .bg-\[\\#0F172A\],
+[data-theme="light"] .bg-slate-900 {
+  background-color: var(--bg-page) !important;
+}
+
+/* Theme transition animation */
+.theme-transition {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease !important;
 }

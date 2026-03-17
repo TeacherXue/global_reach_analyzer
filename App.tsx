@@ -3,9 +3,11 @@ import ClockHeader from './components/ClockHeader';
 import WorldTable from './components/WorldTable';
 import AssistantModal from './components/AssistantModal';
 import CountryDetailPanel from './components/CountryDetailPanel';
+import { useTheme } from './ThemeContext';
 import { CountryData } from './types';
 
 const App: React.FC = () => {
+  const { isDark } = useTheme();
   const [currentTime, setCurrentTime] = useState<Date>(new Date());
   const [modalOpen, setModalOpen] = useState(false);
   const [selectedCountry, setSelectedCountry] = useState<CountryData | null>(null);
@@ -26,7 +28,7 @@ const App: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#0F172A]">
+    <div className={`min-h-screen transition-colors duration-300 ${isDark ? 'bg-[#0F172A]' : 'bg-slate-100'}`}>
       <ClockHeader currentTime={currentTime} />
 
       <main className="max-w-[95vw] mx-auto px-4 pt-5 pb-8">
