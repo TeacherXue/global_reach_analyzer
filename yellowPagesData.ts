@@ -841,6 +841,10 @@ export const YELLOW_PAGES_DATA: Record<string, Record<string, YellowPagesEntry[]
     // ===== 哈萨克斯坦 =====
     KAZ: {
         company_search: [
+            { name: 'Yellow Pages Kazakhstan', url: 'https://yellow-pages.kz', description: '哈萨克斯坦本地企业黄页' },
+            { name: 'KazakhstanYP', url: 'https://kazakhstanyp.com', description: '哈萨克斯坦工商页企业目录' },
+            { name: 'SPR Kazakhstan', url: 'https://kz.spr.ru', description: '哈萨克斯坦企业与机构查询平台' },
+            { name: 'Yelo Kazakhstan', url: 'https://yelo.kz', description: '哈萨克斯坦本地黄页目录' },
             { name: 'Kaz Soopage', url: 'https://kaz.soopage.com/', description: '哈萨克斯坦地区企业免费信息平台' },
             { name: 'Yenino', url: 'https://www.yenino.com/kz-en/search', description: '快速搜索哈萨克斯坦企业信息的英文平台' },
             { name: 'D-OnlineYellowPages', url: 'https://www.d-onlineyellowpages.com/countries/kazakhstan', description: '多行业英文版在线黄页' },
@@ -864,6 +868,8 @@ export const YELLOW_PAGES_DATA: Record<string, Record<string, YellowPagesEntry[]
         company_search: [
             { name: 'Yellow Pages Uzbekistan', url: 'https://www.yellowpages.uz/', description: '乌兹别克斯坦最权威黄页网站' },
             { name: 'Golden Pages', url: 'https://www.goldenpages.uz/', description: '本地化企业目录平台' },
+            { name: 'Flagma Uzbekistan', url: 'https://flagma.uz', description: '乌兹别克斯坦分类广告与企业目录平台' },
+            { name: 'Tovar.uz', url: 'https://tovar.uz', description: '乌兹别克斯坦商品与企业服务目录' },
             { name: 'D-OnlineYellowPages Uzbekistan', url: 'https://www.d-onlineyellowpages.com/countries/uzbekistan/', description: '英文版黄页目录' },
         ],
         b2b: [
@@ -878,6 +884,9 @@ export const YELLOW_PAGES_DATA: Record<string, Record<string, YellowPagesEntry[]
     KGZ: {
         company_search: [
             { name: 'Yelo Kyrgyzstan', url: 'https://yelo.com.kg/', description: '吉尔吉斯斯坦最主要的本地黄页平台' },
+            { name: 'Yellow Pages AKIpress', url: 'https://yellowpages.akipress.org', description: '新闻机构AKIpress旗下黄页' },
+            { name: 'Cybo Kyrgyzstan', url: 'https://cybo.com/kyrgyzstan', description: 'Cybo全球商业目录吉尔吉斯斯坦版' },
+            { name: 'Golden Pages Kyrgyzstan', url: 'https://goldenpages.kg', description: '吉尔吉斯斯坦本地企业目录' },
             { name: 'D-OnlineYellowPages Kyrgyzstan', url: 'https://www.d-onlineyellowpages.com/countries/kyrgyzstan/', description: '多行业英文目录平台' },
         ],
         b2b: [
@@ -890,6 +899,7 @@ export const YELLOW_PAGES_DATA: Record<string, Record<string, YellowPagesEntry[]
     // ===== 塔吉克斯坦 =====
     TJK: {
         company_search: [
+            { name: 'Flagma Tajikistan', url: 'https://flagma-tj.com', description: '塔吉克斯坦分类信息与企业目录' },
             { name: 'Yellowpages.net Tajikistan', url: 'https://www.yellowpages.net/places/TJ', description: '英文版黄页平台的塔吉克斯坦专区' },
             { name: 'Central Asia Commerce Tajikistan', url: 'https://centralasiacommerce.com/', description: '收录塔吉克斯坦部分企业' },
         ],
@@ -902,6 +912,7 @@ export const YELLOW_PAGES_DATA: Record<string, Record<string, YellowPagesEntry[]
     // ===== 土库曼斯坦 =====
     TKM: {
         company_search: [
+            { name: 'Turkmenportal', url: 'https://turkmenportal.com', description: '土库曼斯坦主要资讯与企业目录平台' },
             { name: 'Central Asia Commerce Turkmenistan', url: 'https://centralasiacommerce.com/', description: '包含部分土库曼企业的基础资料' },
         ],
         b2b: [
