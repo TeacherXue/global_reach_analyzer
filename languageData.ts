@@ -37,12 +37,12 @@ export interface CountryLanguageInfo {
   englishProficiency: 'high' | 'medium' | 'low' | 'native'; // English proficiency level
   languages: string[];    // All major languages spoken (language IDs)
   // New fields for business communication
-  googleMapsLang: string;       // Google Maps default language in this country
-  businessLang: string;         // Recommended language for business emails/WhatsApp
+  googleMapsLang?: string;      // Google Maps default language in this country
+  businessLang?: string;        // Recommended language for business emails/WhatsApp
   businessLangAlt?: string;     // Alternative business language
   businessNote?: string;        // Notes about business communication
-  preferredMessenger: 'whatsapp' | 'wechat' | 'line' | 'kakaotalk' | 'telegram' | 'viber' | 'other'; // Preferred messaging app
-  whatsappPopularity: 'high' | 'medium' | 'low'; // WhatsApp usage level
+  preferredMessenger?: 'whatsapp' | 'wechat' | 'line' | 'kakaotalk' | 'telegram' | 'viber' | 'other'; // Preferred messaging app
+  whatsappPopularity?: 'high' | 'medium' | 'low'; // WhatsApp usage level
 }
 
 // Messenger info for display
@@ -106,7 +106,7 @@ export const COUNTRY_LANGUAGES: Record<string, CountryLanguageInfo> = {
     preferredMessenger: 'whatsapp',
     whatsappPopularity: 'high',
   },
-  
+
   // South America
   BRA: {
     iso3: 'BRA',
@@ -1031,8 +1031,6 @@ export const COUNTRY_LANGUAGES: Record<string, CountryLanguageInfo> = {
     preferredMessenger: 'whatsapp',
     whatsappPopularity: 'medium',
   },
-
-  // Central Asia
   KAZ: {
     iso3: 'KAZ',
     name: '哈萨克斯坦',
@@ -2683,17 +2681,17 @@ export const getEnglishProficiencyLabel = (level: string): { text: string; color
 export const getCountryInfo = (iso3: string): CountryLanguageInfo | null => {
   const country = COUNTRY_LANGUAGES[iso3];
   if (!country) return null;
-  
+
   // Provide default values for new fields if missing
   return {
     ...country,
     googleMapsLang: country.googleMapsLang || country.primaryLanguage,
     businessLang: country.businessLang || (country.englishProficiency === 'native' || country.englishProficiency === 'high' ? '英语' : country.primaryLanguage),
     businessLangAlt: country.businessLangAlt,
-    businessNote: country.businessNote || (country.englishProficiency === 'native' ? '直接用英语' : 
-                   country.englishProficiency === 'high' ? '英语可行' : 
-                   country.englishProficiency === 'medium' ? '英语在商务场合可行' : 
-                   `建议用${country.primaryLanguage}`),
+    businessNote: country.businessNote || (country.englishProficiency === 'native' ? '直接用英语' :
+      country.englishProficiency === 'high' ? '英语可行' :
+        country.englishProficiency === 'medium' ? '英语在商务场合可行' :
+          `建议用${country.primaryLanguage}`),
     preferredMessenger: country.preferredMessenger || 'whatsapp',
     whatsappPopularity: country.whatsappPopularity || (country.englishProficiency === 'low' ? 'medium' : 'high'),
   };
