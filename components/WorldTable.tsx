@@ -1,7 +1,7 @@
 import React, { useMemo, useState } from 'react';
 import { COUNTRIES, BEIJING_TZ } from '../constants';
 import { ComputedCountryData, CountryData } from '../types';
-import { AlertCircle, Clock, Search, Filter, Sun, Sunset, Palmtree, Coffee } from 'lucide-react';
+import { AlertCircle, Clock, Search, Filter, Sun, Sunset, Palmtree, Coffee, Star } from 'lucide-react';
 import { useTheme } from '../ThemeContext';
 
 interface WorldTableProps {
@@ -16,6 +16,7 @@ const ID_TO_ISO3: Record<string, string> = {
   'cu': 'CUB', 'do': 'DOM', 'gt': 'GTM', 'cr': 'CRI', 'pa': 'PAN',
   'br': 'BRA', 'ar': 'ARG', 'cl': 'CHL', 'co': 'COL', 'pe': 'PER',
   've': 'VEN', 'ec': 'ECU', 'uy': 'URY', 'py': 'PRY', 'bo': 'BOL',
+  'gy': 'GUY', 'sr': 'SUR',
   'uk': 'GBR', 'de': 'DEU', 'fr': 'FRA', 'it': 'ITA', 'es': 'ESP',
   'nl': 'NLD', 'ch': 'CHE', 'lu': 'LUX', 'se': 'SWE', 'no': 'NOR',
   'dk': 'DNK', 'fi': 'FIN', 'ie': 'IRL', 'pl': 'POL', 'at': 'AUT',
@@ -27,7 +28,7 @@ const ID_TO_ISO3: Record<string, string> = {
   'bd': 'BGD', 'lk': 'LKA', 'mv': 'MDV', 'np': 'NPL',
   'kz': 'KAZ', 'uz': 'UZB', 'tm': 'TKM', 'tj': 'TJK', 'kg': 'KGZ', 'az': 'AZE',
   'vn': 'VNM', 'th': 'THA', 'id': 'IDN', 'my': 'MYS', 'ph': 'PHL',
-  'mm': 'MMR', 'kh': 'KHM', 'mn': 'MNG',
+  'mm': 'MMR', 'kh': 'KHM', 'mn': 'MNG', 'bn': 'BRN',
   'au': 'AUS', 'nz': 'NZL', 'pg': 'PNG',
   'ae': 'ARE', 'sa': 'SAU', 'qa': 'QAT', 'kw': 'KWT', 'om': 'OMN',
   'bh': 'BHR', 'iq': 'IRQ', 'jo': 'JOR', 'lb': 'LBN', 'il': 'ISR',
@@ -151,8 +152,31 @@ const checkHoliday = (date: Date, countryId: string): string | null => {
   return null;
 };
 
+const FAVORITES_KEY = 'gra_favorites';
+
+const useFavorites = () => {
+  const [favorites, setFavorites] = React.useState<Set<string>>(() => {
+    try {
+      const stored = localStorage.getItem(FAVORITES_KEY);
+      return stored ? new Set(JSON.parse(stored)) : new Set();
+    } catch { return new Set(); }
+  });
+
+  const toggle = React.useCallback((id: string) => {
+    setFavorites(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      localStorage.setItem(FAVORITES_KEY, JSON.stringify([...next]));
+      return next;
+    });
+  }, []);
+
+  return { favorites, toggle };
+};
+
 const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest, onCountryClick }) => {
   const { isDark } = useTheme();
+  const { favorites, toggle: toggleFavorite } = useFavorites();
   const [filterRegion, setFilterRegion] = useState<string>('All');
   const [searchTerm, setSearchTerm] = useState<string>('');
 
@@ -178,6 +202,13 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
         timeZone: country.timeZone,
         hour12: false
       }).format(currentTime);
+
+      const displayLocalDate = new Intl.DateTimeFormat('zh-CN', {
+        month: 'numeric',
+        day: 'numeric',
+        weekday: 'short',
+        timeZone: country.timeZone,
+      }).format(currentTime); // e.g. "3月26日周三"
 
       // 2. Calculate UTC offset
       // Format the same time in UTC and local timezone to get hour difference
@@ -225,12 +256,15 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
       const afternoonSlot = country.bestSlots.find(s => s.label.toLowerCase().includes('afternoon')) || country.bestSlots[1];
 
       const getBjTime = (localH: number) => {
-        const val = ((localH + hourDiff) % 24 + 24) % 24;
-        return `${val.toString().padStart(2, '0')}:00`;
+        const totalMinutes = ((localH * 60 + hourDiff * 60) % (24 * 60) + 24 * 60) % (24 * 60);
+        const h = Math.floor(totalMinutes / 60);
+        const m = totalMinutes % 60;
+        return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
       };
 
-      const primeMorningBj = morningSlot ? getBjTime(morningSlot.startHour + 1) : '-';
-      const primeAfternoonBj = (afternoonSlot && afternoonSlot !== morningSlot) ? getBjTime(afternoonSlot.startHour + 1) : '-';
+      // 早安/午安发信点：取时段开始后0.5小时（提前半小时，原为+1）
+      const primeMorningBj = morningSlot ? getBjTime(morningSlot.startHour + 0.5) : '-';
+      const primeAfternoonBj = (afternoonSlot && afternoonSlot !== morningSlot) ? getBjTime(afternoonSlot.startHour + 0.5) : '-';
 
 
       // Sorting Logic
@@ -269,12 +303,14 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
         }
       });
 
-      // 5. Formulate strings
+      // 5. Formulate strings（最佳发信时段提前30分钟）
       const nextGoodSlotBeijing = country.bestSlots.map(s => {
-        let startBj = ((s.startHour + hourDiff) % 24 + 24) % 24;
-        let endBj = ((s.endHour + hourDiff) % 24 + 24) % 24;
-        const f = (n: number) => n.toString().padStart(2, '0');
-        return `${f(startBj)}:00-${f(endBj)}:00`;
+        const toMinutes = (localH: number) => ((localH * 60 + hourDiff * 60) % (24 * 60) + 24 * 60) % (24 * 60);
+        const fmt = (mins: number) => {
+          const h = Math.floor(mins / 60); const m = mins % 60;
+          return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}`;
+        };
+        return `${fmt(toMinutes(s.startHour - 0.5))}-${fmt(toMinutes(s.endHour - 0.5))}`;
       }).join(' / ');
 
       const nextGoodSlotLocal = country.bestSlots.map(s => {
@@ -291,6 +327,7 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
       return {
         ...country,
         currentLocalTimeStr: displayLocalTime,
+        currentLocalDateStr: displayLocalDate,
         isCurrentlyGood,
         minutesUntilNextSlot: minSortScore,
         nextGoodSlotLocal,
@@ -309,6 +346,14 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
 
   // Filtering
   const filteredData = computedData.filter(c => {
+    // Favorites Filter
+    if (filterRegion === 'Favorites') {
+      if (!favorites.has(c.id)) return false;
+      // Still apply search within favorites
+      const searchLower = searchTerm.toLowerCase().trim();
+      if (!searchLower) return true;
+      return c.name.toLowerCase().includes(searchLower) || c.callingCode.includes(searchLower);
+    }
     // Region Filter
     const regionMatch = filterRegion === 'All' || c.region === filterRegion || c.region.includes(filterRegion);
 
@@ -365,6 +410,29 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
             <Filter className="w-3 h-3" />
             Region
           </div>
+
+          {/* 收藏标签 - 始终在 All 前面 */}
+          <button
+            onClick={() => setFilterRegion('Favorites')}
+            className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-sm font-medium transition-all whitespace-nowrap border ${
+              filterRegion === 'Favorites'
+                ? 'bg-amber-500 text-white shadow-md shadow-amber-500/30 border-amber-400'
+                : isDark
+                  ? 'bg-slate-800 text-amber-400 hover:bg-amber-500/10 border-amber-500/40 hover:border-amber-400'
+                  : 'bg-white text-amber-500 hover:bg-amber-50 border-amber-200 hover:border-amber-300'
+            }`}
+          >
+            <Star className={`w-3.5 h-3.5 ${filterRegion === 'Favorites' ? 'fill-white' : isDark ? 'fill-amber-400' : 'fill-amber-400'}`} />
+            收藏
+            {favorites.size > 0 && (
+              <span className={`text-xs px-1.5 py-0.5 rounded-full font-bold ${
+                filterRegion === 'Favorites'
+                  ? 'bg-white/30 text-white'
+                  : isDark ? 'bg-amber-500/20 text-amber-300' : 'bg-amber-100 text-amber-600'
+              }`}>{favorites.size}</span>
+            )}
+          </button>
+
           {regions.map(r => (
             <button
               key={r}
@@ -441,6 +509,20 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
               >
                 <td className="p-4 relative z-10">
                   <div className="flex items-center gap-3">
+                    {/* 星星收藏按钮 */}
+                    <button
+                      onClick={(e) => { e.stopPropagation(); toggleFavorite(item.id); }}
+                      className={`shrink-0 p-1 rounded-full transition-all hover:scale-110 active:scale-95 ${
+                        favorites.has(item.id)
+                          ? 'text-amber-400 hover:text-amber-500'
+                          : isDark
+                            ? 'text-slate-600 hover:text-amber-400'
+                            : 'text-slate-300 hover:text-amber-400'
+                      }`}
+                      title={favorites.has(item.id) ? '取消收藏' : '收藏'}
+                    >
+                      <Star className={`w-4 h-4 transition-all ${favorites.has(item.id) ? 'fill-amber-400' : 'fill-none'}`} />
+                    </button>
                     <span className="text-3xl" role="img" aria-label={item.name}>{item.flag}</span>
                     <div>
                       <div className={`font-semibold text-sm ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>{item.name}</div>
@@ -461,6 +543,9 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
 
                 <td className={`p-4 font-mono font-medium text-base relative z-10 ${isDark ? 'text-slate-200' : 'text-slate-700'}`}>
                   {item.currentLocalTimeStr}
+                  <div className={`text-xs font-sans font-normal mt-0.5 ${isDark ? 'text-slate-500' : 'text-slate-400'}`}>
+                    {item.currentLocalDateStr}
+                  </div>
                 </td>
 
                 <td className={`p-4 text-center font-mono font-medium text-sm whitespace-nowrap relative z-10 ${isDark ? 'text-slate-300' : 'text-slate-600'}`}>
@@ -546,9 +631,19 @@ const WorldTable: React.FC<WorldTableProps> = ({ currentTime, onAssistantRequest
       </div>
 
       {sortedData.length === 0 && (
-        <div className={`p-12 text-center flex flex-col items-center ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
-          <AlertCircle className="w-12 h-12 mb-2 opacity-50" />
-          <p>未找到匹配的国家 (No countries found).</p>
+        <div className={`p-12 text-center flex flex-col items-center gap-3 ${isDark ? 'text-slate-400' : 'text-slate-500'}`}>
+          {filterRegion === 'Favorites' ? (
+            <>
+              <Star className="w-12 h-12 mb-1 opacity-30" />
+              <p className="font-medium">暂无收藏的国家</p>
+              <p className="text-sm opacity-70">点击国家列表中的 ★ 星标即可收藏</p>
+            </>
+          ) : (
+            <>
+              <AlertCircle className="w-12 h-12 mb-2 opacity-50" />
+              <p>未找到匹配的国家 (No countries found).</p>
+            </>
+          )}
         </div>
       )}
     </div>

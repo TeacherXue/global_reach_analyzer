@@ -16,6 +16,7 @@ export interface CountryData {
 
 export interface ComputedCountryData extends CountryData {
   currentLocalTimeStr: string;
+  currentLocalDateStr: string;  // e.g. "3月26日 周三"
   isCurrentlyGood: boolean;
   nextGoodSlotLocal: string;
   nextGoodSlotBeijing: string;

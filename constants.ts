@@ -243,6 +243,24 @@ export const COUNTRIES: CountryData[] = [
     callingCode: '+591',
     bestSlots: DEFAULT_SLOTS
   },
+  {
+    id: 'gy',
+    name: '圭亚那 Guyana',
+    flag: '🇬🇾',
+    region: '南美 South America',
+    timeZone: 'America/Guyana',
+    callingCode: '+592',
+    bestSlots: DEFAULT_SLOTS
+  },
+  {
+    id: 'sr',
+    name: '苏里南 Suriname',
+    flag: '🇸🇷',
+    region: '南美 South America',
+    timeZone: 'America/Paramaribo',
+    callingCode: '+597',
+    bestSlots: DEFAULT_SLOTS
+  },
 
   // --- Europe ---
   {
@@ -806,6 +824,15 @@ export const COUNTRIES: CountryData[] = [
     region: '大洋洲 Oceania',
     timeZone: 'Pacific/Fiji',
     callingCode: '+679',
+    bestSlots: DEFAULT_SLOTS
+  },
+  {
+    id: 'bn',
+    name: '文莱 Brunei',
+    flag: '🇧🇳',
+    region: '亚洲 Asia',
+    timeZone: 'Asia/Brunei',
+    callingCode: '+673',
     bestSlots: DEFAULT_SLOTS
   },
 
